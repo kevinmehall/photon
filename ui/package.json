@@ -1,0 +1,13 @@
+{
+	"dependencies": {
+		"preact": "^10.5.14"
+	},
+	"alias": {
+		"react": "preact/compat",
+		"react-dom/test-utils": "preact/test-utils",
+		"react-dom": "preact/compat"
+	},
+	"scripts": {
+		"build": "esbuild app.tsx --bundle --sourcemap --outdir=www/ --jsx-factory=preact.h --jsx-fragment=preact.Fragment --target=es2021"
+	}
+}
