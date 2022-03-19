@@ -1,12 +1,11 @@
 import * as preact from "preact";
-import { useEffect, useReducer, useState } from "preact/hooks";
 import { SidebarFields } from "./Sidebar";
 import { Table } from "./Table";
 import { useReq } from "./req";
 import * as Icons from "./icons";
 import { FieldsRes, QueryReq, QueryRes } from "./api";
 import { useUrl } from "./util";
-import { reducer, initialState } from "./state";
+import { usePhotonState } from "./state";
 
 function App() {
     const [url, setUrl] = useUrl();
@@ -15,7 +14,7 @@ function App() {
     const datasetName = urlParts[0] || 'default'
 
     const fields = useReq<null, FieldsRes>("get", `/${datasetName}/_fields`)
-    const [state, dispatch] = useReducer(reducer, initialState);
+    const [state, dispatch] = usePhotonState();
 
     const data = useReq<QueryReq, QueryRes>('post', `/${datasetName}/_query`, {
         filter: {},
