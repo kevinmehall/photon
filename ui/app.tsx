@@ -17,7 +17,7 @@ function App() {
     const [state, dispatch] = usePhotonState();
 
     const data = useReq<QueryReq, QueryRes>('post', `/${datasetName}/_query`, {
-        filter: {},
+        filter: state.filter,
         returning: state.fields,
     });
 

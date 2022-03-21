@@ -1,9 +1,14 @@
 export type Field = {};
 
+export type FilterKeywordIs = { is: string[] };
+export type FilterKeywordNot = { not: string[] };
+export type FilterNumberRange = { min?: number; max?: number };
+
 export type Filter =
-    | {}
-    | { eq: string | number }
-    | { min?: number; max?: number }
+    | undefined
+    | FilterKeywordIs
+    | FilterKeywordNot
+    | FilterNumberRange
     ;
 
 export type FieldsRes = { fields: { [key: string]: Field } };

@@ -11,8 +11,9 @@ pub struct Query {
 #[serde(untagged)]
 pub enum QueryFilter {
     Present { present: bool }, // { present: true }
+    KeywordIs { is: IndexSet<String> }, // { is: [] }
+    KeywordNot{ not: IndexSet<String> }, // { isNot: [] }
     Range { min: Option<f64>, max: Option<f64> }, // { min: ..., max: ... }
-    String(IndexSet<String>), // [ ]
 }
 
 #[test]

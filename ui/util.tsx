@@ -21,3 +21,7 @@ export function useUrl(): [string, (newUrl: string) => string] {
 
     return [current, change]
 }
+
+export function classes(classes: {[key: string]: boolean}): string {
+    return Object.keys(classes).filter((k) => classes[k]).join(" ")
+}

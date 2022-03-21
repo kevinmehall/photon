@@ -1,8 +1,10 @@
 import * as preact from "preact";
 import { State, DispatchFn } from "./state";
-import { Field, FieldsRes } from "./api";
+import { Field, FieldsRes, Filter } from "./api";
 import { Res } from "./req";
 import * as Icons from "./icons";
+import { classes } from "util";
+import { useState } from "preact/hooks";
 
 export type SidebarFieldsProps = {
     fieldsRes: Res<FieldsRes>,
@@ -14,7 +16,7 @@ type FieldProps = {
     fieldName: string,
     field: Field;
     state: State,
-    dispatch: DispatchFn;
+    dispatch: DispatchFn,
 };
 
 export function SidebarFields({fieldsRes, state, dispatch}: SidebarFieldsProps) {
@@ -27,22 +29,64 @@ export function SidebarFields({fieldsRes, state, dispatch}: SidebarFieldsProps) 
 
     return (
         <div id='fields'>
-            {Object.entries(fields).map(([fieldName, field]) => <Field fieldName={fieldName} field={field} state={state} dispatch={dispatch} />)}
+            {Object.entries(fields).map(([fieldName, field]) => 
+                <Field 
+                    fieldName={fieldName}
+                    field={field}
+                    state={state}
+                    dispatch={dispatch}
+                />
+            )}
         </div>
     );
 }
 
 function Field({ fieldName, field, state, dispatch }: FieldProps) {
-    const visible = state.fields.includes(fieldName);
+    const inTable = state.fields.includes(fieldName);
     return (
-        <div class='field'>
-            <span class='fieldName'>{fieldName}</span>
-            <button
-                title={visible ? "Remove field from table" : "Show field in table"}
-                onClick={() => dispatch({type: visible ? 'removeField' : 'addField', field: fieldName})}
-            >
-                { visible ? <Icons.RemoveCircle /> : <Icons.AddCircleOutline /> }
-            </button>
-        </div>
+        <details class={classes({ field: true })}>
+            <summary>
+                <h3>
+                    <span class='fieldName'>{fieldName}</span>
+                    <button
+                        title={inTable ? "Remove field from table" : "Show field in table"}
+                        onClick={(e) => {
+                            dispatch({type: inTable ? 'removeField' : 'addField', field: fieldName});
+                            e.preventDefault();
+                        }}
+                    >
+                        { inTable ? <Icons.RemoveCircle /> : <Icons.AddCircleOutline /> }
+                    </button>
+                </h3>
+
+                <FilterList filter={state.filter[fieldName]} />
+            </summary>
+            <input class='filter-add' type='text' onKeyUp={(e) => {
+                if (e.code == "Enter" && e.currentTarget.value != '') {
+                    dispatch({ type: 'filterKeyword', field: fieldName, value: e.currentTarget.value, include: !e.shiftKey });
+                    e.currentTarget.value = '';
+                }
+             }} />
+        </details>
     );
+}
+
+type FilterProps = { filter: Filter };
+
+function FilterList({filter}: FilterProps) {
+    if (filter && "is" in filter) {
+        return (
+            <ul class='filter filter-keyword-is'>
+                {filter.is.map((v) => (<li>{v}</li>))}
+            </ul>
+        );
+    } else if (filter && "not" in filter) {
+        return (
+            <ul class='filter filter-keyword-is-not'>
+                {filter.not.map((v) => (<li>{v}</li>))}
+            </ul>
+        );
+    } else {
+        return null;
+    }
 }

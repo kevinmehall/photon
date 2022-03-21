@@ -16,6 +16,7 @@ export type Action =
     | { type: 'replace', state: State }
     | { type: 'addField', field: string }
     | { type: 'removeField', field: string }
+    | { type: 'filterKeyword', field: string, value: string, include: boolean }
     ;
 
 export type DispatchFn = (_: Action) => void;
@@ -31,6 +32,34 @@ function reducer(state: State, action: Action): State {
             return { ...state, fields: [...state.fields, action.field] };
         case 'removeField':
             return { ...state, fields: state.fields.filter(e => e != action.field) };
+        case 'filterKeyword':
+            return { ...state, filter: { 
+                ...state.filter,
+                [action.field]: updateKeywordFilter(state.filter[action.field], action.value, action.include)
+            }};
+
+    }
+}
+
+function addRemove<T>(arr: T[], val: T, include: boolean): T[] {
+    if (include) {
+        return arr.includes(val) ? arr : [...arr, val];
+    } else {
+        return arr.filter((x) => x != val);
+    }
+}
+
+function updateKeywordFilter(filter: Filter, value: string, include: boolean): Filter {
+    if (filter && "is" in filter) {
+        const v = addRemove(filter.is, value, include);
+        return v.length ? { is : v } : undefined;
+    } else if (include) {
+        return { is: [value] };
+    } else if (filter && "not" in filter) {
+        const v = addRemove(filter.not, value, !include);
+        return v.length ? { not: v } : undefined;
+    } else {
+        return { not: [value] };
     }
 }
 
