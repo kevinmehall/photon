@@ -34,5 +34,6 @@ pub struct Parser {
 #[serde(tag = "parser")]
 #[serde(rename_all = "lowercase")]
 pub enum ParserKind {
-    Dissect { pattern: String }
+    Dissect { pattern: String },
+    UserAgent,
 }

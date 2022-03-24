@@ -1,6 +1,7 @@
 use crate::query::FieldVal;
 
 mod dissect;
+mod user_agent;
 
 pub(crate) trait Parser: Send + Sync {
     fn instance<'s>(&'s self) -> Box<dyn ParserInst + 's>;
@@ -18,5 +19,6 @@ pub(crate) fn new(spec: &crate::config::dataset::ParserKind) -> Box<dyn Parser> 
     use crate::config::dataset::ParserKind::*;
     match spec {
         Dissect { pattern } => Box::new(dissect::Dissect::new(pattern).unwrap()),
+        UserAgent => Box::new(user_agent::UserAgent),
     }
 }
