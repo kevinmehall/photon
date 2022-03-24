@@ -15,7 +15,7 @@ pub struct Source {
 #[non_exhaustive]
 #[derive(Clone, Deserialize)]
 #[serde(tag = "source")]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum SourceKind {   
     FileLines { path: String }
 }

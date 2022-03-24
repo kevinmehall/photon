@@ -1,4 +1,4 @@
-use crate::query::FieldVal;
+use crate::{query::FieldVal, ConfigError};
 
 mod dissect;
 mod user_agent;
@@ -15,10 +15,10 @@ pub(crate) trait ParserInst: Send {
     fn parse(&self, input: &str) -> Vec<FieldVal>;
 }
 
-pub(crate) fn new(spec: &crate::config::dataset::ParserKind) -> Box<dyn Parser> {
+pub(crate) fn new(spec: &crate::config::dataset::ParserKind) -> Result<Box<dyn Parser>, ConfigError> {
     use crate::config::dataset::ParserKind::*;
-    match spec {
-        Dissect { pattern } => Box::new(dissect::Dissect::new(pattern).unwrap()),
+    Ok(match spec {
+        Dissect { pattern } => Box::new(dissect::Dissect::new(pattern).map_err(ConfigError::InvalidConfig)?),
         UserAgent => Box::new(user_agent::UserAgent),
-    }
+    })
 }

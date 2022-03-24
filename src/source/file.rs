@@ -8,8 +8,8 @@ pub(crate) struct FileLines {
 }
 
 impl FileLines {
-    pub(crate) fn new(fname: &str) -> Self {
-        Self { fname: PathBuf::from(fname) }
+    pub(crate) fn new(fname: &str) -> Result<Self, &'static str> {
+        Ok(Self { fname: PathBuf::from(fname) })
     }
 }
 

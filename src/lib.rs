@@ -23,13 +23,15 @@ pub struct Dataset {
 
 impl Dataset {
     pub fn from_config(conf: &config::dataset::Dataset) -> Result<Dataset, ConfigError> {
-        let source = source::new(&conf.source.kind);
-        let parsers = conf.parsers.iter().map(|p| {
+        let source = source::new(&conf.source.kind)?;
+        let mut parsers = IndexMap::new();
+
+        for p in conf.parsers.iter() {
             let field = p.field.clone().unwrap_or("".to_owned());
             let dest = p.dest.clone().unwrap_or_else(|| field.clone());
-            let parser = parser::new(&p.kind);
-            (dest, (field, parser))
-        }).collect();
+            let parser = parser::new(&p.kind)?;
+            parsers.insert(dest, (field, parser));
+        }
 
         Ok(Self { source, parsers })
     }
@@ -58,9 +60,12 @@ impl Dataset {
 
 #[derive(Error, Debug)]
 pub enum ConfigError {
-    #[error("IO error")]
+    #[error("{0}")]
     Io(#[from] std::io::Error),
 
-    #[error("TOML error")]
-    Toml(#[from] toml::de::Error)
+    #[error("{0}")]
+    Toml(#[from] toml::de::Error),
+
+    #[error("{0}")]
+    InvalidConfig(&'static str),
 }

@@ -18,7 +18,7 @@ impl Dissect {
             if let Some((field, rest)) = rest.split_once("}") {
                 fields.push(field.to_owned());
                 pattern = rest;
-            } else { return Err("unterminated matcher") };
+            } else { return Err("unterminated matcher in dissect pattern") };
         }
 
         if !pattern.is_empty() {
