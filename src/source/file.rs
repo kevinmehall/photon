@@ -23,17 +23,22 @@ impl Source for FileLines {
         files.sort_by(|a, b|
             natord::compare(&a.to_string_lossy(), &b.to_string_lossy())
         );
-
        
         let mut rows_scanned = 0;
         let mut results = ResultSet::new(plan.returning.keys().map(|n| n.to_string()).collect());
 
         for fname in files {
-            let file = BufReader::new(File::open(&fname)?);
-            read_lines(file, &plan, &mut results, &mut rows_scanned)?;
+            let mut file = BufReader::new(File::open(&fname)?);
+
+            let b = file.fill_buf()?;
+            if b.starts_with(&[0x1f, 0x8b]) {
+                let reader = BufReader::new(flate2::bufread::GzDecoder::new(file));
+                read_lines(reader, &plan, &mut results, &mut rows_scanned)?;
+            } else {
+                read_lines(file, &plan, &mut results, &mut rows_scanned)?;
+            }
         }
         
-
        Ok(results)
     }
 
@@ -42,13 +47,13 @@ impl Source for FileLines {
     }
 }
 
-fn read_lines(mut file: BufReader<File>, plan: &QueryPlan, results: &mut ResultSet, rows_scanned: &mut i32) -> Result<(), QueryError> {
+fn read_lines(mut file: impl BufRead, plan: &QueryPlan, results: &mut ResultSet, rows_scanned: &mut i32) -> Result<(), QueryError> {
      let mut buf = Vec::new();
+     let mut pos = 0;
     'line: loop {
         *rows_scanned += 1;
     
         buf.clear();
-        let pos = file.stream_position()?;
         let read_size = file.read_until(b'\n', &mut buf)?;
         if read_size == 0 { break; }
     
@@ -81,6 +86,7 @@ fn read_lines(mut file: BufReader<File>, plan: &QueryPlan, results: &mut ResultS
             results.push(&String::from(mem::replace(&mut data[loc.parser][loc.field], FieldVal::Null)));
         }
         results.end_row();
+        pos += read_size;
     }
     Ok(())
 }
