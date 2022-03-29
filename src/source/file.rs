@@ -21,7 +21,7 @@ impl Source for FileLines {
             .collect::<Vec<_>>();
         
         files.sort_by(|a, b|
-            natord::compare(&a.to_string_lossy(), &b.to_string_lossy())
+            natord::compare(&a.to_string_lossy(), &b.to_string_lossy()).reverse()
         );
        
         let mut rows_scanned = 0;
@@ -29,13 +29,14 @@ impl Source for FileLines {
 
         for fname in files {
             let mut file = BufReader::new(File::open(&fname)?);
+            let fname_str = fname.to_string_lossy();
 
             let b = file.fill_buf()?;
             if b.starts_with(&[0x1f, 0x8b]) {
                 let reader = BufReader::new(flate2::bufread::GzDecoder::new(file));
-                read_lines(reader, &plan, &mut results, &mut rows_scanned)?;
+                read_lines(&fname_str, reader, &plan, &mut results, &mut rows_scanned)?;
             } else {
-                read_lines(file, &plan, &mut results, &mut rows_scanned)?;
+                read_lines(&fname_str, file, &plan, &mut results, &mut rows_scanned)?;
             }
         }
         
@@ -43,11 +44,11 @@ impl Source for FileLines {
     }
 
     fn fields(&self) -> Box<dyn Iterator<Item = (String, crate::api::fields::Field)>> {
-        Box::new(["line", "offset"].iter().map(|x| (x.to_string(), crate::api::fields::Field {} )))
+        Box::new(["filename", "line", "offset"].iter().map(|x| (x.to_string(), crate::api::fields::Field {} )))
     }
 }
 
-fn read_lines(mut file: impl BufRead, plan: &QueryPlan, results: &mut ResultSet, rows_scanned: &mut i32) -> Result<(), QueryError> {
+fn read_lines(fname: &str, mut file: impl BufRead, plan: &QueryPlan, results: &mut ResultSet, rows_scanned: &mut i32) -> Result<(), QueryError> {
      let mut buf = Vec::new();
      let mut pos = 0;
     'line: loop {
@@ -61,6 +62,7 @@ fn read_lines(mut file: impl BufRead, plan: &QueryPlan, results: &mut ResultSet,
     
         for &field in &plan.root_fields {
             let v = match field {
+                "filename" => FieldVal::String(fname.to_string()),
                 "line" => FieldVal::String(String::from_utf8_lossy(&*buf).trim_end_matches('\n').to_string()),
                 "offset" => FieldVal::Number(pos as f64),
                 _ => FieldVal::Null,
