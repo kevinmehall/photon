@@ -36,4 +36,5 @@ pub struct Parser {
 pub enum ParserKind {
     Dissect { pattern: String },
     UserAgent,
+    Timestamp,
 }

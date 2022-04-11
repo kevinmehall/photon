@@ -86,6 +86,12 @@ function FilterList({filter}: FilterProps) {
                 {filter.not.map((v) => (<li>{v}</li>))}
             </ul>
         );
+    } else if (filter && "min" in filter) {
+        return (
+            <ul class='filter filter-range'>
+                {filter.min} - {filter.max}
+            </ul>
+        );
     } else {
         return null;
     }

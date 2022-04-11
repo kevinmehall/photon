@@ -1,5 +1,6 @@
 use indexmap::{IndexMap, IndexSet};
 use thiserror::Error;
+use time::OffsetDateTime;
 
 use crate::{ api::{self, query::QueryFilter}, parser::{Parser, ParserInst} };
 
@@ -8,6 +9,7 @@ pub(crate) enum FieldVal{
     Null,
     String(String),
     Number(f64),
+    Time(OffsetDateTime),
     Exists,
 }
 
@@ -17,6 +19,7 @@ impl From<FieldVal> for String {
             FieldVal::Null => String::new(),
             FieldVal::String(s) => s,
             FieldVal::Number(n) => n.to_string(),
+            FieldVal::Time(t) => t.format(&time::format_description::well_known::Rfc3339).unwrap(),
             FieldVal::Exists => "-".to_owned(),
         }
     }

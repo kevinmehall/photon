@@ -186,7 +186,7 @@ button svg {
     padding: 0 12px;
 }
 
-#sidebar .filter-keyword-is li, #sidebar .filter-keyword-is-not li {
+#sidebar .filter-keyword-is li, #sidebar .filter-keyword-is-not li, #sidebar .filter-range {
     font-size: 12px;
     display: inline-block;
     margin: 0 4px;
@@ -203,6 +203,11 @@ button svg {
 #sidebar .filter-keyword-is-not li {
     border-color: #f66;
     background: #fce;
+}
+
+#sidebar .filter-range {
+    border-color: #66f;
+    background: #ccf;
 }
 
 #sidebar #fields .field .filter-add {
