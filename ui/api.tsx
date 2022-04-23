@@ -1,3 +1,9 @@
+export type RootDataset = { ok: boolean };
+export type RootRes = {
+    version: string,
+    datasets: { [key: string]: RootDataset };
+}
+
 export type Field = {};
 
 export type FilterKeywordIs = { is: string[] };

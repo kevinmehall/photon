@@ -49,6 +49,7 @@ summary::-webkit-details-marker {
     --gray90: #f4f6fa;
     --gray75: #f9fafc;
     --gray50: #fafbff;
+    --red600: #A73636;
 }
 
 html {
@@ -68,16 +69,21 @@ body {
 button {
     -webkit-appearance: none;
     -moz-appearance: none;
-    border-radius: 4px;
-    transition: box-shadow 80ms ease-in-out;
     cursor: pointer;
     white-space: nowrap;
     user-select: none;
-    outline: none;
-    color: #474d66;
+    outline: none; 
     padding: 0;
-    border: 0 transparent;
     background: transparent;
+    border: 0 transparent;
+    text-align: left;
+    font-size: inherit;
+}
+
+button.default {
+    border-radius: 4px;
+    transition: box-shadow 80ms ease-in-out;
+    color: #474d66;
     box-sizing: border-box;
     display: flex;
     justify-content: center;
@@ -106,7 +112,7 @@ button svg {
     z-index: 100;
 }
 
-#header button {
+#header button, #header #home-version {
     align-self: center;
     font-size: 20px;
     padding: 8px;
@@ -117,8 +123,35 @@ button svg {
     height: 1em;
 }
 
-#source-name {
+#source-name, #header #home-version {
     font-weight: bold;
+}
+
+#header #home-version span {
+    color: var(--gray700);
+    font-weight: normal;
+}
+
+#home-dataset-list {
+    display: flex;
+    flex-direction: column;
+}
+
+#home-dataset-list > button {
+    margin: 16px 16px 0 16px;
+    padding: 16px;
+    border: 1px solid var(--gray400);
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#home-dataset-list > button:hover {
+    background: var(--gray75);
+}
+
+#home-dataset-list .home-dataset-error {
+    font-size: 12px;
+    color: var(--red600);
 }
 
 #source-slash {

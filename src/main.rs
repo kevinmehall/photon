@@ -110,9 +110,18 @@ async fn handle_request(datasets: &Datasets, request: Request<Body>) -> Result<R
     match (request.method(), &path_parts[..]) {
         (&Method::GET, &["_static", file]) => serve_static(file).await,
         (&Method::GET, _) if is_html => serve_static("index.html").await,
-        (&Method::GET, &[]) => Ok(json_response(json!({
-            "version": env!("CARGO_PKG_VERSION")
-        }))),
+        (&Method::GET, &[]) => {
+            let ds = datasets.read().await;
+            
+            let ds_response = ds.iter().map(|(name, d)| {
+                (name.clone(), api::root::Dataset { ok: d.is_ok() })
+            }).collect();
+
+            Ok(json_response(api::root::RootResponse {
+                datasets: ds_response,
+                version: env!("CARGO_PKG_VERSION")
+            }))
+        }
         (_, &[dataset_name, ref subpath @ ..]) => {
             match datasets.read().await.get(dataset_name) {
                 Some(Ok(dataset)) => handle_dataset_request(dataset, request, subpath).await,
