@@ -159,6 +159,31 @@ button svg {
     color: var(--gray700);
 }
 
+body > .modal-alert {
+    place-self: center center;
+    grid-column: 1/-1;
+    position: relative;
+    padding: 64px 128px;
+    line-height: 2em;
+    text-align: center;
+}
+
+body > .modal-alert h2 {
+    font-weight: normal;
+    font-size: 200%;
+}
+
+body > .modal-alert > svg.icon {
+    margin: -128px auto 16px auto;
+    height: 128px;
+    display: block;
+    color: var(--gray500);
+}
+
+body > .modal-alert > p {
+    color: var(--gray800);
+}
+
 #sidebar {
     grid-column: 1;
     grid-row: 2;

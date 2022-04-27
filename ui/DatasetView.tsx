@@ -17,6 +17,33 @@ export function DatasetView({ datasetName, onChangeDataset }: DatasetViewProps) 
         returning: state.fields
     });
 
+    let body = (() => {
+        if (fields.status == 'ok') {
+            return (<>
+                <div id='sidebar'>
+                    <SidebarFields fieldsRes={fields} state={state} dispatch={dispatch} />
+                </div>
+                <div id='data'>
+                    <Table dataRes={data} state={state} dispatch={dispatch} />
+                </div>
+            </>);
+        } else if (fields.status == 'err') {
+            return (
+                <div class='modal-alert' id='dataset-error'>
+                    <Icons.WarningOutline />
+                    <h2>{fields.error.message}</h2>
+                    <p>{fields.error.detail}</p>
+                </div>
+            );
+        } else {
+            return (
+                <div class='modal-alert' id='dataset-loading'>
+                    <h2>Loading</h2>
+                </div>
+            );
+        }
+    })();
+
     return (
         <>
             <div id='header'>
@@ -25,12 +52,8 @@ export function DatasetView({ datasetName, onChangeDataset }: DatasetViewProps) 
                     <Icons.ChevronDown />
                 </button>
             </div>
-            <div id='sidebar'>
-                <SidebarFields fieldsRes={fields} state={state} dispatch={dispatch} />
-            </div>
-            <div id='data'>
-                <Table dataRes={data} state={state} dispatch={dispatch} />
-            </div>
+
+            {body}
         </>
     );
 

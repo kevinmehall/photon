@@ -3,7 +3,7 @@ import { useState, useEffect } from "preact/hooks";
 export type Res<T> =
     | { status: 'loading' }
     | { status: 'ok', data: T }
-    | { status: 'err', msg: string }
+    | { status: 'err', error: { code: string, message: string, detail?: string} }
     ;
 
 export function useReq<ReqT, ResT>(method: 'get' | 'post', path: string, req?: ReqT): Res<ResT> {
@@ -24,10 +24,10 @@ export function useReq<ReqT, ResT>(method: 'get' | 'post', path: string, req?: R
                 if (response.ok) {
                     setRes({ status: 'ok', data: await response.json() })
                 } else {
-                    setRes({ status: 'err', msg: (await response.json()).message })
+                    setRes({ status: 'err', error: await response.json() })
                 }
             })
-            .catch(error => setRes({ status: 'err', msg: error }));
+            .catch(error => setRes({ status: 'err', error: {"code":"fetch", "message": "Network error", detail: error.message }}));
     }, [method, path, body]);
 
     return res;

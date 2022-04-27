@@ -20,12 +20,13 @@ struct Args {
     listen: SocketAddr,
 }
 
-fn init_datasets(config_dir: &std::path::Path) -> IndexMap<String, Result<Dataset, ConfigError>> {
+fn init_datasets(config_dir: &std::path::Path) -> IndexMap<String, Result<Dataset, Arc<ConfigError>>> {
     fs::read_dir(config_dir).unwrap()
         .filter_map(|f| f.ok())
         .filter_map(|f| {
             if let Some(name) = f.file_name().to_str().and_then(|name| name.strip_suffix(".dataset.toml")) {
-                let dataset = Dataset::from_config_file(f.path());
+                let dataset = Dataset::from_config_file(f.path())
+                    .map_err(Arc::new);
                 
                 if let Err(e) = &dataset {
                     eprintln!("Configuration error for dataset `{name}`: {e}")
@@ -39,7 +40,7 @@ fn init_datasets(config_dir: &std::path::Path) -> IndexMap<String, Result<Datase
         .collect()
 }
 
-type Datasets = Arc<RwLock<IndexMap<String, Result<Dataset, ConfigError>>>>;
+type Datasets = Arc<RwLock<IndexMap<String, Result<Dataset, Arc<ConfigError>>>>>;
 
 
 #[tokio::main]
@@ -95,7 +96,7 @@ async fn serve_static(path: &str) -> Result<Response<Body>, Error> {
             .body(body.into())
             .unwrap())
     } else {
-        Err(Error::NotFound)
+        Err(Error::InvalidRoute)
     }
 }
 
@@ -125,11 +126,11 @@ async fn handle_request(datasets: &Datasets, request: Request<Body>) -> Result<R
         (_, &[dataset_name, ref subpath @ ..]) => {
             match datasets.read().await.get(dataset_name) {
                 Some(Ok(dataset)) => handle_dataset_request(dataset, request, subpath).await,
-                Some(Err(_)) => Err(Error::DatasetConfigError),
-                None => Err(Error::NotFound)
+                Some(Err(e)) => Err(Error::DatasetConfigError(e.clone())),
+                None => Err(Error::DatasetNotFound)
             }
         }
-        _ => Err(Error::NotFound)
+        _ => Err(Error::InvalidRoute)
     }
 }
 
@@ -143,7 +144,7 @@ async fn handle_dataset_request(dataset: &Dataset, mut request: Request<Body>, p
             let results = dataset.query(&query).map_err(Error::QueryError)?; 
             Ok(json_response(photon::api::query::Response { results }))
         }
-        _ => Err(Error::NotFound)
+        _ => Err(Error::InvalidRoute)
     }
 }
 
@@ -179,8 +180,11 @@ fn test_accept_header() {
 
 #[derive(Debug, Error)]
 enum Error {
-    #[error("Not found")]
-    NotFound,
+    #[error("Invalid route")]
+    InvalidRoute,
+
+    #[error("Dataset not found")]
+    DatasetNotFound,
 
     #[error("Expected JSON request body")]
     RequestNotJson,
@@ -189,7 +193,7 @@ enum Error {
     InvalidRequestBody(serde_json::Error),
 
     #[error("Dataset configuration could not be loaded")]
-    DatasetConfigError,
+    DatasetConfigError(Arc<ConfigError>),
 
     #[error("Query failed")]
     QueryError(photon::QueryError)
@@ -198,22 +202,45 @@ enum Error {
 impl Error {
     fn status_code(&self) -> StatusCode {
         match self {
-            Error::NotFound => StatusCode::NOT_FOUND,
-            Error::DatasetConfigError => StatusCode::SERVICE_UNAVAILABLE,
+            Error::InvalidRoute => StatusCode::NOT_FOUND,
+            Error::DatasetNotFound => StatusCode::NOT_FOUND,
+            Error::DatasetConfigError(_) => StatusCode::SERVICE_UNAVAILABLE,
             Error::RequestNotJson => StatusCode::BAD_REQUEST,
             Error::InvalidRequestBody(_) => StatusCode::BAD_REQUEST,
             Error::QueryError(_) => StatusCode::BAD_REQUEST,
             
         }
     }
+
+    fn error_code(&self) -> &'static str {
+        match self {
+            Error::InvalidRoute => "invalid_route",
+            Error::DatasetNotFound => "dataset_not_found",
+            Error::RequestNotJson => "invalid_request_json",
+            Error::InvalidRequestBody(_) => "invalid_request",
+            Error::DatasetConfigError(ConfigError) => "config_error",
+            Error::QueryError(_) => "query_failed",
+        }
+    }
+
+    fn detail(&self) -> Option<String> {
+        match self {
+            Error::DatasetConfigError(e) => Some(e.to_string()),
+            _ => None,
+        }
+    }
+
     fn into_response(self) -> Response<Body> {
         let status = self.status_code();
-        let message = format!("{self}");
 
         Response::builder()
             .status(status)
             .header("content-type", "application/json")
-            .body(serde_json::to_vec(&serde_json::json!({"message": message})).unwrap().into())
+            .body(serde_json::to_vec(&serde_json::json!({
+                "code": self.error_code(),
+                "message": format!("{self}"),
+                "detail": self.detail(),
+            })).unwrap().into())
             .unwrap()
     }
 }
