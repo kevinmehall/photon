@@ -1,73 +1,116 @@
 import * as preact from "preact";
-import { State, DispatchFn } from "./state";
+import { State, DispatchFn, Action } from "./state";
 import { Field, FieldsRes, Filter } from "./api";
 import { Res } from "./req";
 import * as Icons from "./icons";
 import { classes } from "util";
 import { useState } from "preact/hooks";
 
-export type SidebarFieldsProps = {
-    fieldsRes: Res<FieldsRes>,
+export type SidebarProps = {
+    fields: FieldsRes,
     state: State,
     dispatch: DispatchFn;
 }
 
-type FieldProps = {
-    fieldName: string,
-    field: Field;
-    state: State,
-    dispatch: DispatchFn,
-};
+export function Sidebar({fields, state, dispatch}: SidebarProps) {
+    const [searchText, setSearch] = useState('');
 
-export function SidebarFields({fieldsRes, state, dispatch}: SidebarFieldsProps) {
-    let fields: { [key: string]: Field };
-    if (fieldsRes.status == 'ok') {
-        fields = fieldsRes.data.fields;
-    } else {
-        return <div>Loading</div>;
+    const searchParse = searchText.match(/^([a-zA-Z0-9\/._-]*)\s*(?:([!:=@~]+[*]*)\s*(.*))?$/) || [];
+    const searchField = searchParse[1] || '';
+    const searchOp = searchParse[2];
+    const searchArg = searchParse[3];
+
+    const filteredFields = Object.entries(fields.fields)
+        .filter(([field, _]) => field.indexOf(searchField) != -1);
+
+    let searchAction: Action;
+    if (fields.fields.hasOwnProperty(searchField) && searchOp) {
+        if (searchOp == ":" && searchArg) {
+            searchAction = { 'type': 'filterKeywordSet', 'field': searchField, 'values': searchArg.split(','), include: true };
+        } else if (searchOp == ':*') {
+            searchAction = { 'type': 'filterPresent', 'field': searchField, present: true };
+        } else if (searchOp == '!' && searchArg) {
+            searchAction = { 'type': 'filterKeywordSet', 'field': searchField, 'values': searchArg.split(','), include: false };
+        }
     }
 
-    return (
+    return (<>
+        <div class='row'>
+            <input
+                id='search'
+                placeholder='Search fields'
+                value={searchText}
+                onInput={(e) => setSearch(e.currentTarget.value)}
+                onKeyDown={(e) => {
+                    console.log(e.code)
+                    if (e.code == "Enter" || e.code == "Tab") {
+                        if (filteredFields.length == 1 && filteredFields[0] && !searchOp) {
+                            setSearch(filteredFields[0][0]);
+                            e.preventDefault();
+                        } else if (e.code == 'Enter' && searchAction) {
+                            dispatch(searchAction);
+                            e.preventDefault();
+                            e.currentTarget.select();
+                        }
+                    } else if (e.code == "Escape") {
+                        setSearch('');
+                    }
+                }}
+            />
+            <button 
+                id='search-clear'
+                onClick={() => setSearch('')}
+                class={classes({ hidden: !searchText })}
+                title="Clear search"
+            >
+                <Icons.CloseOutline />
+            </button>
+        </div>
         <div id='fields'>
-            {Object.entries(fields).map(([fieldName, field]) => 
-                <Field 
+            {filteredFields.map(([fieldName, field]) =>
+                <Field
+                    key = {fieldName}
                     fieldName={fieldName}
                     field={field}
+                    selectField = {() => setSearch(fieldName)}
+                    selected={fieldName === searchField}
                     state={state}
                     dispatch={dispatch}
                 />
             )}
         </div>
-    );
+    </>);
 }
 
-function Field({ fieldName, field, state, dispatch }: FieldProps) {
+
+type FieldProps = {
+    fieldName: string,
+    field: Field;
+    state: State,
+    selectField: () => void,
+    selected: boolean,
+    dispatch: DispatchFn,
+};
+
+function Field({ fieldName, field, selectField, selected, state, dispatch }: FieldProps) {
     const inTable = state.fields.includes(fieldName);
     return (
-        <details class={classes({ field: true })}>
-            <summary>
-                <h3>
-                    <span class='fieldName'>{fieldName}</span>
-                    <button
-                        title={inTable ? "Remove field from table" : "Show field in table"}
-                        onClick={(e) => {
-                            dispatch({type: inTable ? 'removeField' : 'addField', field: fieldName});
-                            e.preventDefault();
-                        }}
-                    >
-                        { inTable ? <Icons.RemoveCircle /> : <Icons.AddCircleOutline /> }
-                    </button>
-                </h3>
-
-                <FilterList filter={state.filter[fieldName]} />
-            </summary>
-            <input class='filter-add' type='text' onKeyUp={(e) => {
-                if (e.code == "Enter" && e.currentTarget.value != '') {
-                    dispatch({ type: 'filterKeyword', field: fieldName, value: e.currentTarget.value, include: !e.shiftKey });
-                    e.currentTarget.value = '';
-                }
-             }} />
-        </details>
+        <div class={classes({ field: true, selected })}>
+            <h3>
+                <button onClick={selectField} class='fieldName'>{fieldName}</button>
+                <button
+                    class='icon'
+                    title={inTable ? "Remove field from table" : "Show field in table"}
+                    onClick={(e) => {
+                        dispatch({type: inTable ? 'removeField' : 'addField', field: fieldName});
+                        e.preventDefault();
+                    }}
+                >
+                    { inTable ? <Icons.RemoveCircle /> : <Icons.AddCircleOutline /> }
+                </button>
+            </h3>
+            <FilterList filter={state.filter[fieldName]} />
+        </div>
     );
 }
 

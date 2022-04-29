@@ -1,5 +1,5 @@
 import * as preact from "preact";
-import { SidebarFields } from "./Sidebar";
+import { Sidebar } from "./Sidebar";
 import { Table } from "./Table";
 import { useReq } from "./req";
 import * as Icons from "./icons";
@@ -21,7 +21,7 @@ export function DatasetView({ datasetName, onChangeDataset }: DatasetViewProps) 
         if (fields.status == 'ok') {
             return (<>
                 <div id='sidebar'>
-                    <SidebarFields fieldsRes={fields} state={state} dispatch={dispatch} />
+                    <Sidebar fields={fields.data} state={state} dispatch={dispatch} />
                 </div>
                 <div id='data'>
                     <Table dataRes={data} state={state} dispatch={dispatch} />

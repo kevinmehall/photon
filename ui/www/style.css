@@ -102,6 +102,24 @@ button svg {
     height: 1.5em;
 }
 
+.row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+}
+
+.column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+.hidden {
+    display: none;
+}
+
 #header {
     grid-row: 1;
     grid-column: 1 / 3;
@@ -189,12 +207,34 @@ body > .modal-alert > p {
     grid-row: 2;
     display: flex;
     flex-direction: column;
-    overflow-y: scroll;
+    overflow: hidden;
+}
+
+#sidebar #search {
+    margin: 4px;
+    padding: 4px;
+    font-size: 16px;
+    flex: 1;
+}
+
+#sidebar #search-clear {
+    position: absolute;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    color: var(--gray700);
+}
+
+#sidebar #search-clear:hover {
+    background: transparent;
+    color: var(--gray800);
 }
 
 #sidebar #fields {
     display: flex;
     flex-direction: column;
+    flex: 1;
+    overflow-y: scroll;
 }
 
 #sidebar .field {
@@ -202,20 +242,15 @@ body > .modal-alert > p {
     flex-direction: column;
 }
 
-#sidebar summary {
+#sidebar .field > button {
     display: flex;
     flex-direction: column;
-}
-
-#sidebar #fields .field[open] {
-    background: var(--gray300);
 }
 
 #sidebar #fields .field h3 {
     display: flex;
     flex-direction: row;
     align-items: center;
-    padding: 4px;
     cursor: pointer;
     font-weight: normal;
 }
@@ -228,16 +263,16 @@ body > .modal-alert > p {
     padding: 4px;
 }
 
+.field.selected .fieldName {
+    font-weight: bold;
+}
 
-#sidebar #fields .field button {
+
+#sidebar #fields .field button.icon {
     width: 24px;
     height: 24px;
     vertical-align: middle;
     color: var(--gray800);
-}
-
-#sidebar #fields .field button:hover {
-    color: var(--gray700);
 }
 
 #sidebar .filter {
