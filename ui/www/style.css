@@ -277,15 +277,20 @@ body > .modal-alert > p {
 
 #sidebar .filter {
     padding: 0 12px;
+    margin-bottom: 4px;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
 }
 
 #sidebar ul.filter li {
     font-size: 12px;
-    display: inline-block;
-    margin: 0 4px;
+    margin: 0px 2px;
     padding: 4px;
     border-radius: 4px;
-    border: 1px solid;
+    height: 20px;
+    list-style-type: none;
+    box-shadow: 0 1px 2px var(--gray200);
 }
 
 #sidebar ul.filter-keyword-is li {
