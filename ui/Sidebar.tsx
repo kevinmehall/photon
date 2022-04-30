@@ -15,7 +15,7 @@ export type SidebarProps = {
 export function Sidebar({fields, state, dispatch}: SidebarProps) {
     const [searchText, setSearch] = useState('');
 
-    const searchParse = searchText.match(/^([a-zA-Z0-9\/._-]*)\s*(?:([!:=@~]+[*]*)\s*(.*))?$/) || [];
+    const searchParse = searchText.match(/^([a-zA-Z0-9\/._-]*)\s*(?:([!:=@~#]+[*]*)\s*(.*))?$/) || [];
     const searchField = searchParse[1] || '';
     const searchOp = searchParse[2];
     const searchArg = searchParse[3];
@@ -33,6 +33,8 @@ export function Sidebar({fields, state, dispatch}: SidebarProps) {
             searchAction = { 'type': 'filterKeywordSet', 'field': searchField, 'values': searchArg.split(','), include: false };
         } else if (searchOp == '!*') {
             searchAction = { 'type': 'filterPresent', 'field': searchField, present: false };
+        } else if (searchOp == "#") {
+            searchAction = { 'type': 'filterClear', field: searchField }
         }
     }
 

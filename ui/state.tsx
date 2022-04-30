@@ -16,6 +16,7 @@ export type Action =
     | { type: 'replace', state: State }
     | { type: 'addField', field: string }
     | { type: 'removeField', field: string }
+    | { type: 'filterClear', field: string }
     | { type: 'filterKeyword', field: string, value: string, include: boolean }
     | { type: 'filterKeywordSet', field: string, values: string[], include: boolean }
     | { type: 'filterPresent', field: string, present: boolean }
@@ -34,6 +35,11 @@ function reducer(state: State, action: Action): State {
             return { ...state, fields: [...state.fields, action.field] };
         case 'removeField':
             return { ...state, fields: state.fields.filter(e => e != action.field) };
+        case 'filterClear':
+            return {...state, filter: {
+                ...state.filter,
+                [action.field]: undefined,
+            }};
         case 'filterKeyword':
             return { ...state, filter: { 
                 ...state.filter,
