@@ -217,6 +217,10 @@ body > .modal-alert > p {
     flex: 1;
 }
 
+#sidebar #search.search-valid {
+    background-color: #efe;
+}
+
 #sidebar #search-clear {
     position: absolute;
     right: 4px;

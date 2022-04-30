@@ -23,7 +23,7 @@ export function Sidebar({fields, state, dispatch}: SidebarProps) {
     const filteredFields = Object.entries(fields.fields)
         .filter(([field, _]) => field.indexOf(searchField) != -1);
 
-    let searchAction: Action;
+    let searchAction: Action | undefined = undefined;
     if (fields.fields.hasOwnProperty(searchField) && searchOp) {
         if (searchOp == ":" && searchArg) {
             searchAction = { 'type': 'filterKeywordSet', 'field': searchField, 'values': searchArg.split(','), include: true };
@@ -42,21 +42,20 @@ export function Sidebar({fields, state, dispatch}: SidebarProps) {
         <div class='row'>
             <input
                 id='search'
+                className={classes({"search-valid": searchAction !== undefined})}
                 placeholder='Search fields'
                 value={searchText}
                 onInput={(e) => setSearch(e.currentTarget.value)}
                 onKeyDown={(e) => {
                     console.log(e.code)
-                    if (e.code == "Enter" || e.code == "Tab") {
+                    if (e.code == "Tab") {
+                        e.preventDefault();
                         if (filteredFields.length == 1 && filteredFields[0] && !searchOp) {
                             setSearch(filteredFields[0][0]);
-                            e.preventDefault();
-                        } else if (e.code == 'Enter' && searchAction) {
-                            dispatch(searchAction);
-                            e.preventDefault();
-                            e.currentTarget.select();
                         }
-
+                    } else if (e.code == 'Enter' && searchAction) {
+                        dispatch(searchAction);
+                        e.currentTarget.select();
                     } else if (e.code == "Escape") {
                         setSearch('');
                     }
