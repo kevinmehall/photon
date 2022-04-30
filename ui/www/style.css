@@ -279,7 +279,7 @@ body > .modal-alert > p {
     padding: 0 12px;
 }
 
-#sidebar .filter-keyword-is li, #sidebar .filter-keyword-is-not li, #sidebar .filter-range {
+#sidebar ul.filter li {
     font-size: 12px;
     display: inline-block;
     margin: 0 4px;
@@ -288,7 +288,7 @@ body > .modal-alert > p {
     border: 1px solid;
 }
 
-#sidebar .filter-keyword-is li {
+#sidebar ul.filter-keyword-is li {
     border-color: #6f6;
     background: #cfe;
 }
@@ -298,13 +298,14 @@ body > .modal-alert > p {
     background: #fce;
 }
 
-#sidebar .filter-range {
+#sidebar .filter-range li {
     border-color: #66f;
     background: #ccf;
 }
 
-#sidebar #fields .field .filter-add {
-    margin: 4px 16px;
+#sidebar .filter-present li {
+    border-color: #eee;
+    background: #eee;
 }
 
 #data {

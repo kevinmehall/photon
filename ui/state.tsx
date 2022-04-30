@@ -18,6 +18,7 @@ export type Action =
     | { type: 'removeField', field: string }
     | { type: 'filterKeyword', field: string, value: string, include: boolean }
     | { type: 'filterKeywordSet', field: string, values: string[], include: boolean }
+    | { type: 'filterPresent', field: string, present: boolean }
     ;
 
 export type DispatchFn = (_: Action) => void;
@@ -43,6 +44,13 @@ function reducer(state: State, action: Action): State {
                 ...state.filter,
                 [action.field]: action.include ? { is: action.values } : { not: action.values }
             }};
+        case 'filterPresent':
+            return {
+                ...state, filter: {
+                    ...state.filter,
+                    [action.field]: { present: action.present }
+                }
+            };
 
     }
 }

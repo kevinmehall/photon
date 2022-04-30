@@ -31,6 +31,8 @@ export function Sidebar({fields, state, dispatch}: SidebarProps) {
             searchAction = { 'type': 'filterPresent', 'field': searchField, present: true };
         } else if (searchOp == '!' && searchArg) {
             searchAction = { 'type': 'filterKeywordSet', 'field': searchField, 'values': searchArg.split(','), include: false };
+        } else if (searchOp == '!*') {
+            searchAction = { 'type': 'filterPresent', 'field': searchField, present: false };
         }
     }
 
@@ -52,6 +54,7 @@ export function Sidebar({fields, state, dispatch}: SidebarProps) {
                             e.preventDefault();
                             e.currentTarget.select();
                         }
+
                     } else if (e.code == "Escape") {
                         setSearch('');
                     }
@@ -117,7 +120,13 @@ function Field({ fieldName, field, selectField, selected, state, dispatch }: Fie
 type FilterProps = { filter: Filter };
 
 function FilterList({filter}: FilterProps) {
-    if (filter && "is" in filter) {
+    if (filter && "present" in filter) {
+        return (
+            <ul class='filter filter-present'>
+                <li>{filter.present ? "present" : "absent"}</li>
+            </ul>
+        );
+    } else if (filter && "is" in filter) {
         return (
             <ul class='filter filter-keyword-is'>
                 {filter.is.map((v) => (<li>{v}</li>))}
