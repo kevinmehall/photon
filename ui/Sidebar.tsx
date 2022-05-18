@@ -100,7 +100,10 @@ function Field({ fieldName, field, selectField, selected, state, dispatch }: Fie
     const inTable = state.fields.includes(fieldName);
     return (
         <div class={classes({ field: true, selected })}>
-            <h3>
+            <h3
+                draggable={true}
+                onDragStart={(e) => e.dataTransfer?.setData('photon-field', fieldName) }
+            >
                 <button onClick={selectField} class='fieldName'>{fieldName}</button>
                 <button
                     class='icon'

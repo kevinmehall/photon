@@ -23,7 +23,6 @@ time, mark, audio, video {
 }
 
 table {
-	border-collapse: collapse;
 	border-spacing: 0;
 }
 
@@ -50,6 +49,7 @@ summary::-webkit-details-marker {
     --gray75: #f9fafc;
     --gray50: #fafbff;
     --red600: #A73636;
+    --blue600: #2952CC;
 }
 
 html {
@@ -320,30 +320,71 @@ body > .modal-alert > p {
 #data {
     grid-column: 2;
     grid-row: 2;
-    overflow-y: scroll;
+    overflow: auto;
+    height: 100%;
 }
 
-#data > table > tr:first-child {
+#data > .table-wrap {
+    min-width: 100%;
+    min-height: 100%;
+}
+
+#data > .table-wrap > .table-message {
+    font-size: 24px;
+    padding: 64px;
+    text-align: center;
+}
+
+#data > .table-wrap > .table-message.highlight {
+    color: var(--gray600);
+}
+
+#data > .table-wrap > table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+#data thead {
     position: sticky;
     display:table-row-group;
     top: 0;
-    background: linear-gradient(to bottom, var(--gray50) 75%, transparent 100%);
 }
 
 #data th {
-    font-size: 16px;
-    padding: 16px;
+    position: relative;
+    font-size: 14px;
+    padding: 8px;
     font-weight: bold;
     text-align: left;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    background: var(--gray50);
+    border: solid var(--gray300);
+    border-width: 0 1px 1px 0;
+    user-select: none;
+}
+
+#data th > .handle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 4px;
+    height: 100%;
+    transition: background-color 0.2s ease;
+}
+
+#data th:not(.row-actions)>.handle:hover, #data th>.handle.selected {
+    cursor: col-resize;
+    background-color: var(--blue600);
 }
 
 #data td {
     font-size: 14px;
     font-family: monospace;
-    padding: 8px 16px;
-    overflow: hidden;
+    padding: 8px;
     border-top: 1px solid var(--gray200);
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-    word-break: break-all;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }

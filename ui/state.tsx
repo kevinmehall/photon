@@ -1,5 +1,5 @@
 import { useEffect, useReducer } from "preact/hooks";
-import { useEvent } from "./util";
+import { insertOrderedSet, useEvent } from "./util";
 import { Filter } from "./api";
 
 export type State = {
@@ -14,7 +14,7 @@ const initialState: State = {
 
 export type Action =
     | { type: 'replace', state: State }
-    | { type: 'addField', field: string }
+    | { type: 'addField', field: string, pos?: number }
     | { type: 'removeField', field: string }
     | { type: 'filterClear', field: string }
     | { type: 'filterKeyword', field: string, value: string, include: boolean }
@@ -29,10 +29,7 @@ function reducer(state: State, action: Action): State {
         case 'replace':
             return { ...state, ...action.state };
         case 'addField':
-            if (state.fields.includes(action.field)) {
-                return state;
-            }
-            return { ...state, fields: [...state.fields, action.field] };
+            return { ...state, fields: insertOrderedSet(state.fields, action.field, action.pos) };
         case 'removeField':
             return { ...state, fields: state.fields.filter(e => e != action.field) };
         case 'filterClear':
