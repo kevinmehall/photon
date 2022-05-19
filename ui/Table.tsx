@@ -1,8 +1,9 @@
 import * as preact from "preact";
+import * as Icons from "./icons";
 import { Res } from "./req";
 import { QueryRes } from "./api";
 import { State, DispatchFn } from "./state";
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import { classes } from "util";
 
 export type TableProps = {
@@ -11,10 +12,17 @@ export type TableProps = {
     dataRes: Res<QueryRes>,
 };
 
+type PopoverState = {
+    field: string,
+    row: number,
+    rect: DOMRect,
+};
+
 export function Table({state, dataRes, dispatch}: TableProps) {
     const [dropCol, setDropCol] = useState<undefined | number>(undefined);
     const [resizeCol, setResizeCol] = useState<undefined | number>(undefined);
     const [widths, setWidths] = useState < { [key: string]: number }>(() => JSON.parse(localStorage.photonFieldWidths || '{}'));
+    const [popoverState, setPopoverState] = useState<PopoverState | undefined>(undefined);
 
     let data;
     if (dataRes.status == 'ok') {
@@ -50,7 +58,25 @@ export function Table({state, dataRes, dispatch}: TableProps) {
                 }
                 setDropCol(undefined);
             }}
+            onClick={(e) => {
+                const cell = (e.target as HTMLElement).closest('td') as HTMLTableCellElement;
+                if (cell) {
+                    const rect = cell.getBoundingClientRect();
+                    const field = state.fields[cell.cellIndex - 1];
+                    if (field == undefined) return;
+                    const row = (cell.parentElement as HTMLTableRowElement).rowIndex - 1;
+
+                    setPopoverState({field, row, rect });
+                }
+            }}
         >
+            { popoverState && <TablePopover
+                rect = { popoverState.rect }
+                field = { popoverState.field }
+                value = { data[popoverState.row]?.[popoverState.field] ?? '' }
+                dispatch = { dispatch }
+                close = { () => setPopoverState(undefined) }
+            /> }
             { state.fields.length ? (<table style={{width: totalWidth}}>
                 <colgroup>
                     <col style = {{width: 32}} />
@@ -127,4 +153,57 @@ function ResizeHandle({ onPress, onMove, onRelease, selected }: ResizeHandleProp
             }}
         />
     );
+}
+
+type TablePopoverProps = {
+    rect: DOMRect,
+    value: string,
+    field: string,
+    dispatch: DispatchFn,
+    close: () => void,
+};
+function TablePopover({rect, value, field, dispatch, close}: TablePopoverProps) {
+    useEffect(() => {
+        const handler = (e: MouseEvent) => {
+            if (!(e.target as HTMLElement).closest('.popover')) {
+                close();
+                e.preventDefault();
+            }
+        }
+        document.body.addEventListener('click', handler)
+        document.body.addEventListener('wheel', handler)
+
+        return () => {
+            document.body.removeEventListener('click', handler)
+            document.body.removeEventListener('wheel', handler)
+        }
+    }, [ close ]);
+
+    const defaultWidth = 400;
+    const visibleWidth = Math.min(rect.right, document.body.clientWidth) - Math.max(rect.left, 0);
+    const maxWidth = Math.max(visibleWidth, defaultWidth);
+
+    const pos = ((rect.left + maxWidth <= document.body.clientWidth)
+        ? { left: Math.max(0, rect.left) }
+        : { right: Math.max(0, document.body.clientWidth - rect.right) }
+    );
+
+    const setFilter = (include: boolean) => {
+        dispatch({ type: 'filterKeyword', field, value, include });
+        close();
+    };
+
+    return (
+        <div class='popover' style={{ maxWidth, top: rect.bottom, ...pos }}>
+            <div class='value'>
+                {value}
+            </div>
+            <div class='toolbar'>
+                <button title="Filter for" onClick={() => setFilter(true)}><Icons.AddCircleOutline /></button>
+                <button title="Filter out" onClick={() => setFilter(false)}><Icons.RemoveCircleOutline /></button>
+                <div class='sep' />
+                <button title="Copy" onClick={() => navigator.clipboard.writeText(value)}><Icons.CopyOutline /></button>
+            </div>
+        </div>
+    )
 }

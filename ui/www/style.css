@@ -388,3 +388,45 @@ body > .modal-alert > p {
     white-space: nowrap;
     text-overflow: ellipsis;
 }
+
+#data .popover {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    padding: 8px;
+    background: var(--gray200);
+    border-radius: 8px;
+    box-shadow: 0px 16px 16px #888;
+}
+
+#data .popover .value {
+    padding: 8px;
+    background: var(--gray50);
+    white-space: pre-wrap;
+    font-family: monospace;
+    font-size: 16px;
+}
+
+#data .popover .toolbar {
+    font-size: 16px;
+    margin-bottom: -8px;
+}
+
+.toolbar {
+    display: flex;
+    flex-direction: row;
+}
+
+.toolbar .sep {
+    flex: 1;
+}
+
+.toolbar button {
+    align-self: center;
+    padding: 0.5em;
+}
+    
+.toolbar button svg {
+    vertical-align: bottom;
+    height: 1.5em;
+}
