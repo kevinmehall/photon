@@ -1,4 +1,4 @@
-use std::{fs, path::Path};
+use std::{fs, path::{Path, PathBuf}, io};
 
 use indexmap::IndexMap;
 
@@ -15,6 +15,48 @@ use thiserror::Error;
 use query::QueryPlan;
 pub use resultset::ResultSet;
 pub use query::QueryError;
+
+pub struct Config {
+    config_dir: PathBuf,
+    datasets: IndexMap<String, Result<Dataset, ConfigError>>,
+}
+
+impl Config {
+    pub fn load(config_dir: PathBuf) -> Result<Config, io::Error> {
+        let mut config = Config { config_dir, datasets: Default::default() };
+        config.reload()?;
+        Ok(config)
+    }
+
+    pub fn reload(&mut self) -> Result<(), io::Error> {
+        self.datasets = fs::read_dir(&self.config_dir)?
+            .filter_map(|f| f.ok())
+            .filter_map(|f| {
+                if let Some(name) = f.file_name().to_str().and_then(|name| name.strip_suffix(".dataset.toml")) {
+                    let dataset = Dataset::from_config_file(f.path());
+                    
+                    if let Err(e) = &dataset {
+                        eprintln!("Configuration error for dataset `{name}`: {e}")
+                    }
+
+                    Some((name.to_owned(), dataset))
+                } else {
+                    None
+                }
+            })
+            .collect();
+        Ok(())
+    }
+
+    pub fn datasets(&self) -> impl Iterator<Item=(&str, Result<&Dataset, &ConfigError>)> {
+        self.datasets.iter()
+            .map(|(name, ds)| (&name[..], ds.as_ref()))
+    }
+
+    pub fn dataset(&self, name: &str) -> Option<Result<&Dataset, &ConfigError>> {
+        self.datasets.get(name).map(|x| x.as_ref())
+    }
+}
 
 pub struct Dataset {
     source: Box<dyn source::Source>,
