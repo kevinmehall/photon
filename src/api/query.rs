@@ -1,6 +1,6 @@
 use serde::{ Serialize, Deserialize };
 use indexmap::{IndexMap, IndexSet};
-use time::{OffsetDateTime, macros::datetime};
+use time::OffsetDateTime;
 
 #[derive(Deserialize)]
 pub struct Query {

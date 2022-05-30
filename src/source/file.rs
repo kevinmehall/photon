@@ -1,4 +1,4 @@
-use std::{fs::File, io::{BufRead, BufReader, Seek}, mem};
+use std::{fs::File, io::{BufRead, BufReader}, mem};
 use crate::{query::{QueryPlan, QueryError, FieldVal}, ResultSet, filter::filter_test};
 
 use super::Source;
