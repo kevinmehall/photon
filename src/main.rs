@@ -7,25 +7,25 @@ mod server;
 
 /// Log analysis and visualization tool
 #[derive(Parser, Debug)]
-#[clap(version, about)]
+#[command(version, about)]
 enum Args {
     Serve {
         /// Directory containing configuration files
-        #[clap(short, long)]
+        #[arg(short, long)]
         config_dir: std::path::PathBuf,
 
-        #[clap(short, long, default_value_t = SocketAddr::from(([127, 0, 0, 1], 3333)))]
+        #[arg(short, long, default_value_t = SocketAddr::from(([127, 0, 0, 1], 3333)))]
         listen: SocketAddr,
     },
     Query {
         /// Directory containing configuration files
-        #[clap(short, long)]
+        #[arg(short, long)]
         config_dir: std::path::PathBuf,
 
-        #[clap(short, long)]
+        #[arg(short, long)]
         dataset: String,
 
-        #[clap(short, long)]
+        #[arg(short, long)]
         query: String,
     },
 }

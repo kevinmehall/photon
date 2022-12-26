@@ -25,6 +25,7 @@ pub enum QueryFilter {
 
 #[test]
 fn test_deserialize_query_filter() {
+    use time::macros::datetime;
     assert_eq!(serde_json::from_str::<QueryFilter>(r#"{"present": true}"#).unwrap(), QueryFilter::Present{present: true});
     assert_eq!(serde_json::from_str::<QueryFilter>(r#"{"min": 5}"#).unwrap(), QueryFilter::Range{min: Some(5.0), max: None});
     assert_eq!(serde_json::from_str::<QueryFilter>(r#"{"min": "2022-03-30T21:21:23-06:00", "max": "2022-03-30T21:22:01-06:00"}"#).unwrap(), 
