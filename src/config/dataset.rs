@@ -1,9 +1,12 @@
+use indexmap::IndexMap;
 use serde::Deserialize;
 
 #[derive(Clone, Deserialize)]
 pub struct Dataset {
     pub source: Source,
-    pub parsers: Vec<Parser>,
+
+    #[serde(default)]
+    pub fields: IndexMap<String, Field>,
 }
 
 #[derive(Clone, Deserialize)]
@@ -20,15 +23,6 @@ pub enum SourceKind {
     FileLines { path: String }
 }
 
-#[derive(Clone, Deserialize)]
-pub struct Parser {
-    pub field: Option<String>,
-    pub dest: Option<String>,
-
-    #[serde(flatten)]
-    pub kind: ParserKind,
-}
-
 #[non_exhaustive]
 #[derive(Clone, Deserialize)]
 #[serde(tag = "parser")]
@@ -38,3 +32,10 @@ pub enum ParserKind {
     UserAgent,
     Timestamp,
 }
+
+#[derive(Clone, Deserialize)]
+pub struct Field {    
+    #[serde(flatten)]
+    pub parser: Option<ParserKind>,
+}
+

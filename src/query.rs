@@ -2,7 +2,7 @@ use indexmap::{IndexMap, IndexSet};
 use thiserror::Error;
 use time::OffsetDateTime;
 
-use crate::{ api::{self, query::QueryFilter}, parser::{Parser, ParserInst} };
+use crate::{ api::{self, query::QueryFilter}, parser::{ParserInst}, Dataset };
 
 #[derive(PartialEq, Clone, Debug)]
 pub(crate) enum FieldVal{
@@ -50,7 +50,7 @@ pub(crate) struct FieldRef {
 }
 
 impl<'a> QueryPlan<'a> {
-    pub (crate) fn new(parser_config: &'a IndexMap<String, (String, Box<dyn Parser>)>, query: &'a api::query::Query) -> Result<QueryPlan<'a>, QueryError> {
+    pub (crate) fn new(dataset: &'a Dataset, query: &'a api::query::Query) -> Result<QueryPlan<'a>, QueryError> {
         let mut plan = QueryPlan {
             root_fields: IndexSet::new(),
             parsers: IndexMap::new(),
@@ -59,26 +59,27 @@ impl<'a> QueryPlan<'a> {
         };
 
         for (field, filter) in query.filter.iter() {
-            let loc = plan.require_field(parser_config, field)?;
+            let loc = plan.require_field(dataset, field)?;
             plan.filters.push((loc, filter.clone()));
         }
 
         for field in query.returning.iter() {
-            let loc = plan.require_field(parser_config, field)?;
+            let loc = plan.require_field(dataset, field)?;
             plan.returning.insert(field, loc);
         }
 
         Ok(plan)
     }
 
-    fn require_field(&mut self, parser_config: &'a IndexMap<String, (String, Box<dyn Parser>)>, field: &'a str) -> Result<FieldRef, QueryError> {
-        Ok(if let Some((parser_dest, leaf_field)) = field.rsplit_once("/") {
-            let (src_field_name, parser_impl) = parser_config.get(parser_dest)
-                .ok_or_else(|| QueryError::NoParserProvides(parser_dest.to_owned()))?;
+    fn require_field(&mut self, dataset: &'a Dataset, field: &'a str) -> Result<FieldRef, QueryError> {
+        Ok(if let Some((parent_field_name, leaf_field)) = field.rsplit_once("/") {
+            let parser_impl = dataset.fields.get(parent_field_name)
+                .and_then(|f| f.parser.as_ref())
+                .ok_or_else(|| QueryError::NoParserProvides(parent_field_name.to_owned()))?;
 
-            let src = self.require_field(parser_config, src_field_name)?;
+            let src = self.require_field(dataset, parent_field_name)?;
             
-            let parser_entry = self.parsers.entry(parser_dest);
+            let parser_entry = self.parsers.entry(parent_field_name);
             let parser_i = parser_entry.index();
             let parser = parser_entry.or_insert_with(|| ParserPlan { 
                 src, parser: parser_impl.instance()
