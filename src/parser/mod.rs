@@ -7,7 +7,7 @@ pub mod timestamp;
 pub(crate) trait ParserInst: Send {
     fn require_field(&mut self, field: &str) -> Option<usize>;
 
-    fn parse(&self, input: &str) -> Vec<FieldVal>;
+    fn parse(&self, input: &mut FieldVal) -> Vec<FieldVal>;
 }
 
 pub(crate) fn child_fields(spec: &crate::config::dataset::ParserKind) -> Vec<&str> {

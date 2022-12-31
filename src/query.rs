@@ -30,6 +30,13 @@ impl FieldVal {
             _ => true
         }
     }
+
+    pub fn as_str(&self) -> Option<&str> {
+        match self {
+            FieldVal::String(s) => Some(s),
+            _ => None,
+        }
+    }
 }
 pub (crate) struct QueryPlan<'a> {
     pub root_fields: IndexSet<&'a str>,
@@ -71,19 +78,10 @@ impl<'a> QueryPlan<'a> {
         Ok(plan)
     }
 
-    fn require_field(&mut self, dataset: &'a Dataset, field: &'a str) -> Result<FieldRef, QueryError> {
-        Ok(if let Some((parent_field_name, leaf_field)) = field.rsplit_once("/") {
-            let parser_conf = dataset.fields.get(parent_field_name)
-                .and_then(|f| f.parser.as_ref())
+    fn require_parser<'s>(&'s mut self, dataset: &'a Dataset, field: &'a str) -> Result<(FieldRef, Option<(usize, &'s mut ParserPlan<'a>)>) , QueryError> {
+        let src = if let Some((parent_field_name, leaf_field)) = field.rsplit_once("/") {
+            let (parser_i, parser) = self.require_parser(dataset, parent_field_name)?.1
                 .ok_or_else(|| QueryError::NoParserProvides(parent_field_name.to_owned()))?;
-
-            let src = self.require_field(dataset, parent_field_name)?;
-            
-            let parser_entry = self.parsers.entry(parent_field_name);
-            let parser_i = parser_entry.index();
-            let parser = parser_entry.or_insert_with(|| ParserPlan { 
-                src, parser: parser::instance(parser_conf)
-             });
 
             let field_index = parser.parser.require_field(leaf_field)
                 .ok_or_else(|| QueryError::FieldNoesNotExist(field.to_owned()))?;
@@ -92,7 +90,22 @@ impl<'a> QueryPlan<'a> {
         } else {
             let field_index = self.root_fields.insert_full(field).0;
             FieldRef{ parser: 0, field: field_index }
-        })
+        };
+
+        let p = dataset.fields.get(field).and_then(|f| f.parser.as_ref()).map(|parser_conf| {
+            let parser_entry = self.parsers.entry(field);
+            let parser_i = parser_entry.index();
+            let parser = parser_entry.or_insert_with(|| ParserPlan { 
+                src, parser: parser::instance(parser_conf)
+            });
+            (parser_i, parser)
+        });
+
+        Ok((src, p))
+    }
+
+    fn require_field(&mut self, dataset: &'a Dataset, field: &'a str) -> Result<FieldRef, QueryError> {
+        Ok(self.require_parser(dataset, field)?.0)
     }
 }
 

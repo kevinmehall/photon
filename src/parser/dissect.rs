@@ -81,7 +81,8 @@ impl<'req> ParserInst for DissectInst<'req> {
         self.0.fields.iter().position(|x| x == field)
     }    
 
-    fn parse(&self, input: &str) -> Vec<FieldVal> {
+    fn parse(&self, input: &mut FieldVal) -> Vec<FieldVal> {
+        let input = input.as_str().unwrap_or_default();
         let mut results = Vec::new();
         if self.0.parse_with(input, |v| results.push(FieldVal::String(v.to_owned()))) {
             debug_assert_eq!(results.len(), self.0.fields.len());

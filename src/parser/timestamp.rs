@@ -44,7 +44,7 @@ pub struct Timestamp {
     pub(super) format: TimeFormat
 }
 
-static FIELDS: &'static [&'static str] = &["timestamp"];
+static FIELDS: &'static [&'static str] = &[];
 
 pub(crate) fn fields() -> Vec<&'static str> {
     FIELDS.into()
@@ -55,10 +55,15 @@ impl ParserInst for Timestamp {
         FIELDS.iter().position(|&x| x == field)
     }
 
-    fn parse(&self, input: &str) -> Vec<FieldVal> {
-        match OffsetDateTime::parse(input, self.format.as_format()) {
-            Ok(t) => vec![FieldVal::Time(t)],
-            Err(_) => vec![FieldVal::Null],
+    fn parse(&self, input: &mut FieldVal) -> Vec<FieldVal> {
+        match input {
+            FieldVal::String(s) => {
+                if let Ok(t) = OffsetDateTime::parse(s, self.format.as_format()) {
+                    *input = FieldVal::Time(t);
+                }                
+            },
+            FieldVal::Null | FieldVal::Number(_) | FieldVal::Time(_) => {},
         }
+        Vec::new()
     }
 }

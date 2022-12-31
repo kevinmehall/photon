@@ -75,7 +75,8 @@ fn read_lines(fname: &str, mut file: impl BufRead, plan: &QueryPlan, results: &m
         data.push(root_data);
     
         for parser in plan.parsers.values() {
-            data.push(parser.parser.parse(&String::from(data[parser.src.parser][parser.src.field].clone())))
+            let vals = parser.parser.parse(&mut data[parser.src.parser][parser.src.field]);
+            data.push(vals);
         }
     
         for (loc, filter) in &plan.filters {

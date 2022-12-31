@@ -15,7 +15,8 @@ impl ParserInst for UserAgent {
         FIELDS.iter().position(|&x| x == field)
     }
 
-    fn parse(&self, input: &str) -> Vec<crate::query::FieldVal> {
+    fn parse(&self, input: &mut FieldVal) -> Vec<crate::query::FieldVal> {
+        let input = input.as_str().unwrap_or_default();
         let res = woothee::parser::Parser::new().parse(input);
 
         if let Some(res) = res {
