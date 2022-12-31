@@ -2,7 +2,7 @@ use indexmap::{IndexMap, IndexSet};
 use thiserror::Error;
 use time::OffsetDateTime;
 
-use crate::{ api::{self, query::QueryFilter}, parser::{ParserInst}, Dataset };
+use crate::{ api::{self, query::QueryFilter}, parser::{ParserInst, self}, Dataset };
 
 #[derive(PartialEq, Clone, Debug)]
 pub(crate) enum FieldVal{
@@ -73,7 +73,7 @@ impl<'a> QueryPlan<'a> {
 
     fn require_field(&mut self, dataset: &'a Dataset, field: &'a str) -> Result<FieldRef, QueryError> {
         Ok(if let Some((parent_field_name, leaf_field)) = field.rsplit_once("/") {
-            let parser_impl = dataset.fields.get(parent_field_name)
+            let parser_conf = dataset.fields.get(parent_field_name)
                 .and_then(|f| f.parser.as_ref())
                 .ok_or_else(|| QueryError::NoParserProvides(parent_field_name.to_owned()))?;
 
@@ -82,7 +82,7 @@ impl<'a> QueryPlan<'a> {
             let parser_entry = self.parsers.entry(parent_field_name);
             let parser_i = parser_entry.index();
             let parser = parser_entry.or_insert_with(|| ParserPlan { 
-                src, parser: parser_impl.instance()
+                src, parser: parser::instance(parser_conf)
              });
 
             let field_index = parser.parser.require_field(leaf_field)

@@ -1,4 +1,5 @@
 use std::{fs, path::{Path, PathBuf}, io};
+use config::dataset::ParserKind;
 use indexmap::IndexMap;
 
 pub mod api;
@@ -60,7 +61,7 @@ impl Config {
 
 #[derive(Default)]
 pub(crate) struct Field {
-    pub(crate) parser: Option<Box<dyn parser::Parser>>,
+    pub(crate) parser: Option<ParserKind>,
 }
 
 pub struct Dataset {
@@ -71,32 +72,29 @@ pub struct Dataset {
 impl Dataset {
     pub fn from_config(conf: &config::dataset::Dataset) -> Result<Dataset, ConfigError> {
         let source = source::new(&conf.source.kind)?;
-        let mut fields: IndexMap<String, Field> = IndexMap::new();
 
+        // Collect explicitly-configured fields
+        let mut fields: IndexMap<String, Field> = conf.fields.iter().map(|(field_name, field_conf)| {
+            (field_name.clone(), Field {
+                parser: field_conf.parser.clone()
+            })
+        }).collect();
+
+        // Collect  fields defined by source
         for (field_name, _) in source.fields() {
             fields.entry(field_name).or_default();
         }
 
+        // Collect fields defined by parsers
         for (field_name, conf_field) in &conf.fields {
-            let (parser, child_fields) = if let Some(p) = &conf_field.parser {
-                let parser = parser::new(p)?;
-                let child_fields = parser.fields().collect();
-                (Some(parser), child_fields)
-            } else {
-                (None, Vec::new())
-            };
+            let child_fields = conf_field.parser.as_ref().map(parser::child_fields).unwrap_or(vec![]);
 
-            
-
-            let mut f = fields.entry(field_name.clone()).or_default();
-            assert!(f.parser.is_none());
-            f.parser = parser;
-
-            // Create child fields defined by parser
-            for (child_field, _) in child_fields {
+            for child_field in child_fields {
                 fields.entry(format!("{field_name}/{child_field}")).or_default();
             }
         }
+
+        fields.sort_keys();
 
         Ok(Self { source, fields })
     }

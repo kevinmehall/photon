@@ -1,8 +1,43 @@
-use time::OffsetDateTime;
+use serde::{Deserialize, Deserializer};
+use time::{OffsetDateTime, format_description::OwnedFormatItem};
 
-use crate::{api::fields::Field, query::FieldVal, config::dataset::TimeFormat};
+use crate::query::FieldVal;
 
-use super::{Parser, ParserInst};
+use super::ParserInst;
+
+
+#[derive(Clone)]
+pub enum TimeFormat {
+    Custom(OwnedFormatItem),
+    WellKnown(&'static (dyn time::parsing::Parsable + Send + Sync))
+}
+
+impl<'de> Deserialize<'de> for TimeFormat {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = String::deserialize(deserializer)?;
+
+        if s.eq_ignore_ascii_case("rfc2822") {
+            Ok(TimeFormat::WellKnown(&time::format_description::well_known::Rfc2822))
+        } else if s.eq_ignore_ascii_case("rfc3339") {
+            Ok(TimeFormat::WellKnown(&time::format_description::well_known::Rfc3339))
+        } else if s.eq_ignore_ascii_case("iso8601") {
+            Ok(TimeFormat::WellKnown(&time::format_description::well_known::Iso8601::PARSING))
+        } else {
+            time::format_description::parse_owned(&s)
+                .map(TimeFormat::Custom)
+                .map_err(serde::de::Error::custom)
+        }
+    }
+}
+
+impl TimeFormat {
+    pub fn as_format(&self) -> &dyn time::parsing::Parsable {
+        match self {
+            TimeFormat::Custom(c) => c,
+            TimeFormat::WellKnown(f) => f,
+        }
+    }
+}
 
 #[derive(Clone)]
 pub struct Timestamp {
@@ -11,14 +46,8 @@ pub struct Timestamp {
 
 static FIELDS: &'static [&'static str] = &["timestamp"];
 
-impl Parser for Timestamp {
-    fn instance<'s>(&'s self) -> Box<dyn super::ParserInst + 's> {
-        Box::new(self.clone())
-    }
-
-    fn fields<'s>(&'s self) -> Box<dyn Iterator<Item = (String, crate::api::fields::Field)> + 's> {
-        Box::new(FIELDS.iter().map(|f| (f.to_string(), Field { })))
-    }
+pub(crate) fn fields() -> Vec<&'static str> {
+    FIELDS.into()
 }
 
 impl ParserInst for Timestamp {

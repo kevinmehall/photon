@@ -1,8 +1,11 @@
+use serde::{Deserialize, Deserializer};
+
 use crate::query::FieldVal;
 
-use super::{Parser, ParserInst};
+use super::ParserInst;
 
-pub(crate) struct Dissect {
+#[derive(Clone)]
+pub struct Dissect {
     literals: Vec<String>,
     fields: Vec<String>,
 }
@@ -60,17 +63,18 @@ impl Dissect {
     }
 }
 
-impl Parser for Dissect {
-    fn instance<'s>(&'s self) -> Box<dyn super::ParserInst + 's> {
-        Box::new(DissectInst(self))
-    }
-
-    fn fields<'s> (&'s self) -> Box<dyn Iterator<Item = (String, crate::api::fields::Field)> + 's> {
-        Box::new(self.fields.iter().map(|s| (s.clone(), crate::api::fields::Field{})))
+impl<'de> Deserialize<'de> for Dissect {
+    fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = String::deserialize(deserializer)?;
+        Dissect::new(&s).map_err(serde::de::Error::custom)
     }
 }
 
-struct DissectInst<'req>(&'req Dissect);
+pub(crate) fn fields(s: &Dissect) -> Vec<&str> {
+    s.fields.iter().map(|x| &x[..]).collect()
+}
+
+pub(crate) struct DissectInst<'req>(pub(crate) &'req Dissect);
 
 impl<'req> ParserInst for DissectInst<'req> {
     fn require_field(&mut self, field: &str) -> Option<usize> {

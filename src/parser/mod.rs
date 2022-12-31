@@ -1,14 +1,8 @@
-use crate::{query::FieldVal, ConfigError};
+use crate::query::FieldVal;
 
-mod dissect;
-mod user_agent;
-mod timestamp;
-
-pub(crate) trait Parser: Send + Sync {
-    fn instance<'s>(&'s self) -> Box<dyn ParserInst + 's>;
-
-    fn fields<'s>(&'s self) -> Box<dyn Iterator<Item = (String, crate::api::fields::Field)> + 's>;
-}
+pub mod dissect;
+pub mod user_agent;
+pub mod timestamp;
 
 pub(crate) trait ParserInst: Send {
     fn require_field(&mut self, field: &str) -> Option<usize>;
@@ -16,11 +10,20 @@ pub(crate) trait ParserInst: Send {
     fn parse(&self, input: &str) -> Vec<FieldVal>;
 }
 
-pub(crate) fn new(spec: &crate::config::dataset::ParserKind) -> Result<Box<dyn Parser>, ConfigError> {
+pub(crate) fn child_fields(spec: &crate::config::dataset::ParserKind) -> Vec<&str> {
     use crate::config::dataset::ParserKind::*;
-    Ok(match spec {
-        Dissect { pattern } => Box::new(dissect::Dissect::new(pattern).map_err(ConfigError::InvalidConfig)?),
+    match spec {
+        Dissect { pattern } => dissect::fields(pattern),
+        UserAgent => user_agent::fields(),
+        Timestamp { .. } => timestamp::fields(),
+    }
+}
+
+pub(crate) fn instance<'a>(spec: &'a crate::config::dataset::ParserKind) -> Box<dyn ParserInst + 'a> {
+    use crate::config::dataset::ParserKind::*;
+    match spec {
+        Dissect { pattern } => Box::new(dissect::DissectInst(pattern)),
         UserAgent => Box::new(user_agent::UserAgent),
         Timestamp { format } => Box::new(timestamp::Timestamp { format: format.clone() }),
-    })
+    }
 }

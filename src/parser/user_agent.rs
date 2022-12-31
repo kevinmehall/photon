@@ -1,19 +1,13 @@
-use crate::{api::fields::Field, query::FieldVal};
+use crate::query::FieldVal;
 
-use super::{Parser, ParserInst};
+use super::ParserInst;
 
 pub struct UserAgent;
 
 static FIELDS: &'static [&'static str] = &["category", "browser", "browser.version", "browser.vendor", "os", "os.version"];
 
-impl Parser for UserAgent {
-    fn instance<'s>(&'s self) -> Box<dyn super::ParserInst + 's> {
-        Box::new(UserAgent)
-    }
-
-    fn fields<'s>(&'s self) -> Box<dyn Iterator<Item = (String, crate::api::fields::Field)> + 's> {
-        Box::new(FIELDS.iter().map(|f| (f.to_string(), Field { })))
-    }
+pub(crate) fn fields() -> Vec<&'static str> {
+    FIELDS.into()
 }
 
 impl ParserInst for UserAgent {
