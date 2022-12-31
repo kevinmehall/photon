@@ -1,16 +1,19 @@
 use time::OffsetDateTime;
 
-use crate::{api::fields::Field, query::FieldVal};
+use crate::{api::fields::Field, query::FieldVal, config::dataset::TimeFormat};
 
 use super::{Parser, ParserInst};
 
-pub struct Timestamp;
+#[derive(Clone)]
+pub struct Timestamp {
+    pub(super) format: TimeFormat
+}
 
 static FIELDS: &'static [&'static str] = &["timestamp"];
 
 impl Parser for Timestamp {
     fn instance<'s>(&'s self) -> Box<dyn super::ParserInst + 's> {
-        Box::new(Timestamp)
+        Box::new(self.clone())
     }
 
     fn fields<'s>(&'s self) -> Box<dyn Iterator<Item = (String, crate::api::fields::Field)> + 's> {
@@ -24,9 +27,7 @@ impl ParserInst for Timestamp {
     }
 
     fn parse(&self, input: &str) -> Vec<FieldVal> {
-        let fmt = time::macros::format_description!("[day]/[month repr:short]/[year]:[hour repr:24]:[minute]:[second] [offset_hour sign:mandatory][offset_minute]");
-        
-        match OffsetDateTime::parse(input, &fmt) {
+        match OffsetDateTime::parse(input, self.format.as_format()) {
             Ok(t) => vec![FieldVal::Time(t)],
             Err(_) => vec![FieldVal::Null],
         }

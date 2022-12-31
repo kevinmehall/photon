@@ -21,6 +21,6 @@ pub(crate) fn new(spec: &crate::config::dataset::ParserKind) -> Result<Box<dyn P
     Ok(match spec {
         Dissect { pattern } => Box::new(dissect::Dissect::new(pattern).map_err(ConfigError::InvalidConfig)?),
         UserAgent => Box::new(user_agent::UserAgent),
-        Timestamp => Box::new(timestamp::Timestamp),
+        Timestamp { format } => Box::new(timestamp::Timestamp { format: format.clone() }),
     })
 }
