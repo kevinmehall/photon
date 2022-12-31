@@ -132,13 +132,13 @@ function FilterList({filter}: FilterProps) {
     } else if (filter && "is" in filter) {
         return (
             <ul class='filter filter-keyword-is'>
-                {filter.is.map((v) => (<li>{v}</li>))}
+                is: {filter.is.map((v) => (<li>{v}</li>))}
             </ul>
         );
     } else if (filter && "not" in filter) {
         return (
             <ul class='filter filter-keyword-is-not'>
-                {filter.not.map((v) => (<li>{v}</li>))}
+                not: {filter.not.map((v) => (<li>{v}</li>))}
             </ul>
         );
     } else if (filter && "min" in filter) {

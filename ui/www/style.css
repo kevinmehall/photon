@@ -300,15 +300,15 @@ body > .modal-alert > p {
 }
 
 #sidebar .filter {
-    padding: 0 12px;
+    padding: 0 12px 0 24px;
     margin-bottom: 4px;
     display: flex;
     flex-direction: row;
     align-items: center;
+    font-size: 12px;
 }
 
 #sidebar ul.filter li {
-    font-size: 12px;
     margin: 0px 2px;
     padding: 4px;
     border-radius: 4px;
