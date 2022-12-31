@@ -1,7 +1,7 @@
 use serde::{Deserialize, Deserializer};
 use time::{OffsetDateTime, format_description::OwnedFormatItem};
 
-use crate::query::FieldVal;
+use crate::{query::FieldVal, FieldDefaults};
 
 use super::ParserInst;
 
@@ -44,15 +44,13 @@ pub struct Timestamp {
     pub(super) format: TimeFormat
 }
 
-static FIELDS: &'static [&'static str] = &[];
-
-pub(crate) fn fields() -> Vec<&'static str> {
-    FIELDS.into()
+pub(crate) fn fields() -> Vec<(&'static str, FieldDefaults)> {
+    vec![]
 }
 
 impl ParserInst for Timestamp {
-    fn require_field(&mut self, field: &str) -> Option<usize> {
-        FIELDS.iter().position(|&x| x == field)
+    fn require_field(&mut self, _field: &str) -> Option<usize> {
+        None
     }
 
     fn parse(&self, input: &mut FieldVal) -> Vec<FieldVal> {

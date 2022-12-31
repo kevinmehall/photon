@@ -1,4 +1,5 @@
 use std::{fs, path::{Path, PathBuf}, io};
+use api::fields::FieldType;
 use config::dataset::ParserKind;
 use indexmap::IndexMap;
 
@@ -59,9 +60,24 @@ impl Config {
     }
 }
 
+pub (crate) struct FieldDefaults {
+    ty: FieldType,
+}
+
 #[derive(Default)]
 pub(crate) struct Field {
     pub(crate) parser: Option<ParserKind>,
+    pub(crate) default_ty: Option<FieldType>,
+}
+
+impl Field {
+    fn ty(&self) -> FieldType {
+        self.parser.as_ref().map(parser::ty).or(self.default_ty).unwrap_or(FieldType::Keyword)
+    }
+
+    fn apply_defaults(&mut self, d: &FieldDefaults) {
+        self.default_ty = Some(d.ty);
+    }
 }
 
 pub struct Dataset {
@@ -76,21 +92,22 @@ impl Dataset {
         // Collect explicitly-configured fields
         let mut fields: IndexMap<String, Field> = conf.fields.iter().map(|(field_name, field_conf)| {
             (field_name.clone(), Field {
-                parser: field_conf.parser.clone()
+                parser: field_conf.parser.clone(),
+                default_ty: None,
             })
         }).collect();
 
         // Collect  fields defined by source
-        for (field_name, _) in source.fields() {
-            fields.entry(field_name).or_default();
+        for (field_name, defaults) in source.fields() {
+            fields.entry(field_name.to_owned()).or_default().apply_defaults(&defaults)
         }
 
         // Collect fields defined by parsers
         for (field_name, conf_field) in &conf.fields {
             let child_fields = conf_field.parser.as_ref().map(parser::child_fields).unwrap_or(vec![]);
 
-            for child_field in child_fields {
-                fields.entry(format!("{field_name}/{child_field}")).or_default();
+            for (child_field, defaults) in child_fields {
+                fields.entry(format!("{field_name}/{child_field}")).or_default().apply_defaults(&defaults);
             }
         }
 
@@ -111,8 +128,8 @@ impl Dataset {
     }
 
     pub fn fields(&self) -> api::fields::Fields {
-        let fields = self.fields.iter().map(|(k, _)| {
-            (k.to_owned(), api::fields::Field {})
+        let fields = self.fields.iter().map(|(k, field)| {
+            (k.to_owned(), api::fields::Field { ty: field.ty() })
         }).collect();
         api::fields::Fields { fields }
     }

@@ -1,4 +1,4 @@
-use crate::query::FieldVal;
+use crate::{query::FieldVal, FieldDefaults, api::fields::FieldType};
 
 pub mod dissect;
 pub mod user_agent;
@@ -10,7 +10,16 @@ pub(crate) trait ParserInst: Send {
     fn parse(&self, input: &mut FieldVal) -> Vec<FieldVal>;
 }
 
-pub(crate) fn child_fields(spec: &crate::config::dataset::ParserKind) -> Vec<&str> {
+pub(crate) fn ty(spec: &crate::config::dataset::ParserKind) -> FieldType {
+    use crate::config::dataset::ParserKind::*;
+    match spec {
+        Dissect { .. } => FieldType::Phrase,
+        UserAgent => FieldType::Phrase,
+        Timestamp { .. } => FieldType::Timestamp,
+    }
+}
+
+pub(crate) fn child_fields(spec: &crate::config::dataset::ParserKind) -> Vec<(&str, FieldDefaults)> {
     use crate::config::dataset::ParserKind::*;
     match spec {
         Dissect { pattern } => dissect::fields(pattern),

@@ -1,4 +1,4 @@
-use crate::query::FieldVal;
+use crate::{query::FieldVal, FieldDefaults, api::fields::FieldType};
 
 use super::ParserInst;
 
@@ -6,8 +6,8 @@ pub struct UserAgent;
 
 static FIELDS: &'static [&'static str] = &["category", "browser", "browser.version", "browser.vendor", "os", "os.version"];
 
-pub(crate) fn fields() -> Vec<&'static str> {
-    FIELDS.into()
+pub(crate) fn fields() -> Vec<(&'static str, FieldDefaults)> {
+    FIELDS.iter().map(|&name| (name, FieldDefaults { ty : FieldType::Keyword })).collect()
 }
 
 impl ParserInst for UserAgent {

@@ -4,7 +4,16 @@ export type RootRes = {
     datasets: { [key: string]: RootDataset };
 }
 
-export type Field = {};
+export type FieldType =
+    | 'keyword'
+    | 'phrase'
+    | 'number'
+    | 'timestamp'
+    ;
+
+export type Field = {
+    type: FieldType,
+};
 
 export type FilterPresent = { present: boolean };
 export type FilterKeywordIs = { is: string[] };

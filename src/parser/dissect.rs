@@ -1,6 +1,6 @@
 use serde::{Deserialize, Deserializer};
 
-use crate::query::FieldVal;
+use crate::{query::FieldVal, FieldDefaults, api::fields::FieldType};
 
 use super::ParserInst;
 
@@ -70,8 +70,8 @@ impl<'de> Deserialize<'de> for Dissect {
     }
 }
 
-pub(crate) fn fields(s: &Dissect) -> Vec<&str> {
-    s.fields.iter().map(|x| &x[..]).collect()
+pub(crate) fn fields(s: &Dissect) -> Vec<(&str, FieldDefaults)> {
+    s.fields.iter().map(|x| (&x[..], FieldDefaults { ty: FieldType::Keyword })).collect()
 }
 
 pub(crate) struct DissectInst<'req>(pub(crate) &'req Dissect);

@@ -1,6 +1,6 @@
 import * as preact from "preact";
 import { State, DispatchFn, Action } from "./state";
-import { Field, FieldsRes, Filter } from "./api";
+import { Field, FieldsRes, FieldType, Filter } from "./api";
 import { Res } from "./req";
 import * as Icons from "./icons";
 import { classes } from "util";
@@ -86,7 +86,6 @@ export function Sidebar({fields, state, dispatch}: SidebarProps) {
     </>);
 }
 
-
 type FieldProps = {
     fieldName: string,
     field: Field;
@@ -104,7 +103,7 @@ function Field({ fieldName, field, selectField, selected, state, dispatch }: Fie
                 draggable={true}
                 onDragStart={(e) => e.dataTransfer?.setData('photon-field', fieldName) }
             >
-                <button onClick={selectField} class='fieldName'>{fieldName}</button>
+                <button onClick={selectField} class='fieldName'><FieldIcon type={field.type} /> {fieldName}</button>
                 <button
                     class='icon'
                     title={inTable ? "Remove field from table" : "Show field in table"}
@@ -151,4 +150,26 @@ function FilterList({filter}: FilterProps) {
     } else {
         return null;
     }
+}
+
+function FieldIcon({ type }: { type: FieldType }) {
+    let icon;
+    switch (type) {
+        case 'keyword':
+            icon = <Icons.CodeOutline />;
+            break;
+        case 'number':
+            icon = '#';
+            break;
+        case 'phrase':
+            icon = <Icons.CubeOutline />;
+            break;
+        case 'timestamp':
+            icon = <Icons.TimeOutline />;
+            break;
+    }
+
+    return (
+        <div class='field-icon' data-type={type}>{icon}</div>
+    );
 }

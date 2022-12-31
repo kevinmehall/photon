@@ -1,5 +1,5 @@
 use std::{fs::File, io::{BufRead, BufReader}, mem};
-use crate::{query::{QueryPlan, QueryError, FieldVal}, ResultSet, filter::filter_test};
+use crate::{query::{QueryPlan, QueryError, FieldVal}, ResultSet, filter::filter_test, FieldDefaults, api::fields::FieldType};
 
 use super::Source;
 
@@ -43,8 +43,12 @@ impl Source for FileLines {
        Ok(results)
     }
 
-    fn fields(&self) -> Box<dyn Iterator<Item = (String, crate::api::fields::Field)>> {
-        Box::new(["filename", "line", "offset"].iter().map(|x| (x.to_string(), crate::api::fields::Field {} )))
+    fn fields(&self) -> Vec<(&str, FieldDefaults)> {
+        vec![
+            ("filename", FieldDefaults { ty: FieldType::Keyword }),
+            ("line",     FieldDefaults { ty: FieldType::Number }),
+            ("offset",   FieldDefaults { ty: FieldType::Number }),
+        ]
     }
 }
 
