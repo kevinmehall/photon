@@ -13,12 +13,15 @@ pub struct Query {
 pub enum QueryFilter {
     Present { present: bool }, // { present: true }
     KeywordIs { is: IndexSet<String> }, // { is: [] }
-    KeywordNot{ not: IndexSet<String> }, // { isNot: [] }
+    KeywordNot{ not: IndexSet<String> }, // { not: [] }
     TimeRange {
         #[serde(with = "time::serde::rfc3339")]
-        min: OffsetDateTime,
+        after: OffsetDateTime,
         #[serde(with = "time::serde::rfc3339")]
-        max: OffsetDateTime,
+        before: OffsetDateTime,
+    },
+    TimeSince {
+        since: f64, // seconds
     },
     Range { min: Option<f64>, max: Option<f64> }, // { min: ..., max: ... }
 }
@@ -28,8 +31,8 @@ fn test_deserialize_query_filter() {
     use time::macros::datetime;
     assert_eq!(serde_json::from_str::<QueryFilter>(r#"{"present": true}"#).unwrap(), QueryFilter::Present{present: true});
     assert_eq!(serde_json::from_str::<QueryFilter>(r#"{"min": 5}"#).unwrap(), QueryFilter::Range{min: Some(5.0), max: None});
-    assert_eq!(serde_json::from_str::<QueryFilter>(r#"{"min": "2022-03-30T21:21:23-06:00", "max": "2022-03-30T21:22:01-06:00"}"#).unwrap(), 
-        QueryFilter::TimeRange{min: datetime!(2022-03-30 21:21:23-06:00), max: datetime!(2022-03-30 21:22:01-06:00)});
+    assert_eq!(serde_json::from_str::<QueryFilter>(r#"{"after": "2022-03-30T21:21:23-06:00", "before": "2022-03-30T21:22:01-06:00"}"#).unwrap(), 
+        QueryFilter::TimeRange{after: datetime!(2022-03-30 21:21:23-06:00), before: datetime!(2022-03-30 21:22:01-06:00)});
 }
 
 #[derive(Serialize)]

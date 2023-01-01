@@ -19,7 +19,8 @@ export type FilterPresent = { present: boolean };
 export type FilterKeywordIs = { is: string[] };
 export type FilterKeywordNot = { not: string[] };
 export type FilterNumberRange = { min?: number; max?: number };
-export type FilterTimeRange = { after?: string, before?: string };
+export type FilterTimeRange = { after: string, before: string };
+export type FilterTimeSince = { since: number };
 
 export type Filter =
     | undefined
@@ -28,6 +29,7 @@ export type Filter =
     | FilterKeywordNot
     | FilterNumberRange
     | FilterTimeRange
+    | FilterTimeSince
     ;
 
 export type FieldsRes = { fields: { [key: string]: Field } };

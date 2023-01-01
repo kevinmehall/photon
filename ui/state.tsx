@@ -16,6 +16,7 @@ export type Action =
     | { type: 'replace', state: State }
     | { type: 'addField', field: string, pos?: number }
     | { type: 'removeField', field: string }
+    | { type: 'filter', field: string, filter: Filter }
     | { type: 'filterClear', field: string }
     | { type: 'filterKeyword', field: string, value: string, include: boolean }
     | { type: 'filterKeywordSet', field: string, values: string[], include: boolean }
@@ -32,6 +33,11 @@ function reducer(state: State, action: Action): State {
             return { ...state, fields: insertOrderedSet(state.fields, action.field, action.pos) };
         case 'removeField':
             return { ...state, fields: state.fields.filter(e => e != action.field) };
+        case 'filter':
+            return {...state, filter: {
+                ...state.filter,
+                [action.field]: action.filter,
+            }};
         case 'filterClear':
             return {...state, filter: {
                 ...state.filter,

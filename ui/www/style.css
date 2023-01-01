@@ -332,9 +332,18 @@ body > .modal-alert > p {
     background: #ccf;
 }
 
+#sidebar .filter-time li {
+    border-color: #ff6;
+    background: #ffc;
+}
+
 #sidebar .filter-present li {
     border-color: #eee;
     background: #eee;
+}
+
+.filter-edit {
+    margin-left: 24px;
 }
 
 #data {
@@ -449,4 +458,36 @@ body > .modal-alert > p {
 .toolbar button svg {
     vertical-align: bottom;
     height: 1.5em;
+}
+
+.toggle-options {
+    display: flex;
+    flex-direction: row;
+    gap: 2px;
+}
+
+.toggle-options > * {
+    flex: 1;
+    border-bottom: 2px solid var(--gray200);
+    padding: 4px;
+}
+
+.toggle-options [selected=true] {
+    background: var(--gray300);
+    border-bottom: 2px solid var(--blue600);
+    font-weight: bold;
+}
+
+.options-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.options-list > * {
+    padding: 4px;
+}
+
+.options-list [selected=true] {
+    font-weight: bold;
+    background: var(--gray300);
 }
