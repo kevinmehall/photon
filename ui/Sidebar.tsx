@@ -118,7 +118,9 @@ function Field({ fieldName, field, selectField, selected, state, dispatch }: Fie
             <FilterList filter={state.filter[fieldName]} />
 
             {selected && field.type == 'timestamp' &&
-                <FilterEditTime field={field} filter={state.filter[fieldName]} setFilter={(f) => dispatch({type: 'filter', field: fieldName, filter: f})}/> }
+                <FilterEditTime fieldName={fieldName} field={field} filter={state.filter[fieldName]} dispatch={dispatch} /> }
+            {selected && field.type == 'keyword' &&
+                <FilterEditKeyword fieldName={fieldName} field={field} filter={state.filter[fieldName]} dispatch={dispatch} />}
         </div>
     );
 }
@@ -194,12 +196,15 @@ function FieldIcon({ type }: { type: FieldType }) {
 }
 
 type FilterEditProps = {
+    fieldName: string
     field: Field;
     filter: Filter,
-    setFilter: (f: Filter) => void,
+    dispatch: DispatchFn,
 };
 
-function FilterEditTime({ field, filter, setFilter }: FilterEditProps) {
+function FilterEditTime({ fieldName, field, filter, dispatch }: FilterEditProps) {
+    const setFilter = (f: Filter) => dispatch({ type: 'filter', field: fieldName, filter: f });
+
     const [mode, setMode] = useState<"abs" | "rel">((filter && 'after' in filter ? 'abs' : 'rel'));
 
     let existingAfter, existingBefore;
@@ -284,4 +289,34 @@ function formatDuration(seconds: number) {
     } else {
         return qty(seconds, 'second', 'seconds');
     }
+}
+
+function FilterEditKeyword({ fieldName, field, filter, dispatch }: FilterEditProps) {
+    const setFilter = (value: string, include: boolean) => dispatch({ type: 'filterKeyword', field: fieldName, value, include });
+    const values: string[] = (field.values ?? []).slice();
+
+    const filterIs = filter && 'is' in filter && filter.is;
+    const filterNot = filter && 'not' in filter && filter.not;
+
+    (filterIs || filterNot || []).forEach((v) => values.includes(v) || values.push(v));
+
+    return (
+        <div class='filter-edit filter-keyword-list options-list'>
+            {values.map((v) => (
+                <div>
+                    {!!(!(filterIs || filterNot) || filterNot && filterNot.includes(v) || filterIs && !filterIs.includes(v)) &&
+                        <button title="Include" onClick={() => setFilter(v, true)}>
+                            { (filterNot && filterNot.includes(v)) ? <Icons.AddCircle /> : <Icons.AddCircleOutline /> }
+                        </button>
+                    }
+                    {!!(!(filterIs || filterNot) || filterNot && !filterNot.includes(v) || filterIs && filterIs.includes(v)) &&
+                        <button title="Exclude" onClick={() => setFilter(v, false)}>
+                            { filterIs && filterIs.includes(v) ? <Icons.RemoveCircle /> : <Icons.RemoveCircleOutline /> }
+                        </button>
+                    }
+                    {v}
+                </div>
+            ))}
+        </div>
+    );
 }

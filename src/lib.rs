@@ -1,5 +1,5 @@
 use std::{fs, path::{Path, PathBuf}, io};
-use api::fields::FieldType;
+use api::fields::{FieldType, FieldDisplayConfig};
 use config::dataset::ParserKind;
 use indexmap::IndexMap;
 
@@ -68,6 +68,7 @@ pub (crate) struct FieldDefaults {
 pub(crate) struct Field {
     pub(crate) parser: Option<ParserKind>,
     pub(crate) default_ty: Option<FieldType>,
+    pub(crate) display: FieldDisplayConfig,
 }
 
 impl Field {
@@ -94,6 +95,7 @@ impl Dataset {
             (field_name.clone(), Field {
                 parser: field_conf.parser.clone(),
                 default_ty: None,
+                display: field_conf.display.clone(),
             })
         }).collect();
 
@@ -129,7 +131,7 @@ impl Dataset {
 
     pub fn fields(&self) -> api::fields::Fields {
         let fields = self.fields.iter().map(|(k, field)| {
-            (k.to_owned(), api::fields::Field { ty: field.ty() })
+            (k.to_owned(), api::fields::Field { ty: field.ty(), display: field.display.clone() })
         }).collect();
         api::fields::Fields { fields }
     }

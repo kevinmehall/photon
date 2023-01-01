@@ -1,7 +1,7 @@
 use indexmap::IndexMap;
 use serde::Deserialize;
 
-use crate::parser::{dissect::Dissect, timestamp::TimeFormat};
+use crate::{parser::{dissect::Dissect, timestamp::TimeFormat}, api::fields::FieldDisplayConfig};
 
 #[derive(Clone, Deserialize)]
 pub struct Dataset {
@@ -40,5 +40,8 @@ pub enum ParserKind {
 pub struct Field {    
     #[serde(flatten)]
     pub parser: Option<ParserKind>,
+
+    #[serde(flatten)]
+    pub display: FieldDisplayConfig,
 }
 

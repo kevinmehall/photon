@@ -73,14 +73,14 @@ function addRemove<T>(arr: T[], val: T, include: boolean): T[] {
 }
 
 function updateKeywordFilter(filter: Filter, value: string, include: boolean): Filter {
-    if (filter && "is" in filter) {
+    if (filter && "is" in filter && (include || filter.is.includes(value))) {
         const v = addRemove(filter.is, value, include);
         return v.length ? { is : v } : undefined;
-    } else if (include) {
-        return { is: [value] };
-    } else if (filter && "not" in filter) {
+    } else if (filter && "not" in filter && (!include || filter.not.includes(value))) {
         const v = addRemove(filter.not, value, !include);
         return v.length ? { not: v } : undefined;
+    } else if (include) {
+        return { is: [value] };
     } else {
         return { not: [value] };
     }

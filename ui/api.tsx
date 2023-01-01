@@ -13,6 +13,7 @@ export type FieldType =
 
 export type Field = {
     type: FieldType,
+    values?: [string],
 };
 
 export type FilterPresent = { present: boolean };

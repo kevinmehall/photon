@@ -1,5 +1,5 @@
 use indexmap::IndexMap;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
 #[derive(Serialize)]
 pub struct Fields {
@@ -10,6 +10,9 @@ pub struct Fields {
 pub struct Field {
     #[serde(rename = "type")]
     pub ty: FieldType,
+
+    #[serde(flatten)]
+    pub display: FieldDisplayConfig,
 }
 
 #[derive(Copy, Clone, Serialize)]
@@ -19,4 +22,9 @@ pub enum FieldType {
     Phrase,
     Number,
     Timestamp,
+}
+
+#[derive(Clone, Serialize, Deserialize, Default)]
+pub struct FieldDisplayConfig {
+    values: Option<Vec<String>>,
 }
