@@ -61,7 +61,7 @@ impl ParserInst for Timestamp {
                     *input = FieldVal::Time(t);
                 }                
             },
-            FieldVal::Null | FieldVal::Number(_) | FieldVal::Time(_) => {},
+            FieldVal::Null | FieldVal::Number(_) | FieldVal::Time(_) | FieldVal::Map(_) => {},
         }
         &mut []
     }

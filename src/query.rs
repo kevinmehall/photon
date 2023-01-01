@@ -10,6 +10,7 @@ pub(crate) enum FieldVal<'b>{
     String(&'b str),
     Number(f64),
     Time(OffsetDateTime),
+    Map(&'b[(&'b str, FieldVal<'b>)]),
 }
 
 impl<'b> std::fmt::Display for FieldVal<'b> {
@@ -19,17 +20,7 @@ impl<'b> std::fmt::Display for FieldVal<'b> {
             FieldVal::String(s) => f.write_str(s),
             FieldVal::Number(n) => n.fmt(f),
             FieldVal::Time(t) => f.write_str(&t.format(&time::format_description::well_known::Rfc3339).unwrap()), // https://github.com/time-rs/time/issues/375
-        }
-    }
-}
-
-impl<'b> From<FieldVal<'b>> for String {
-    fn from(v: FieldVal) -> Self {
-        match v {
-            FieldVal::Null => String::new(),
-            FieldVal::String(s) => s.to_string(),
-            FieldVal::Number(n) => n.to_string(),
-            FieldVal::Time(t) => t.format(&time::format_description::well_known::Rfc3339).unwrap(),
+            FieldVal::Map(_) => f.write_str(""), //TODO: serialize as JSON?
         }
     }
 }

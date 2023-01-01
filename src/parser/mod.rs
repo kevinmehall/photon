@@ -5,6 +5,7 @@ use crate::{query::FieldVal, FieldDefaults, api::fields::FieldType};
 pub mod dissect;
 pub mod user_agent;
 pub mod timestamp;
+mod json;
 
 pub(crate) trait ParserInst: Send {
     fn require_field(&mut self, field: &str) -> Option<usize>;
@@ -18,6 +19,7 @@ pub(crate) fn ty(spec: &crate::config::dataset::ParserKind) -> FieldType {
         Dissect { .. } => FieldType::Phrase,
         UserAgent => FieldType::Phrase,
         Timestamp { .. } => FieldType::Timestamp,
+        Json => FieldType::Phrase,
     }
 }
 
@@ -27,6 +29,7 @@ pub(crate) fn child_fields(spec: &crate::config::dataset::ParserKind) -> Vec<(&s
         Dissect { pattern } => dissect::fields(pattern),
         UserAgent => user_agent::fields(),
         Timestamp { .. } => timestamp::fields(),
+        Json => vec![],
     }
 }
 
@@ -36,5 +39,6 @@ pub(crate) fn instance<'a>(spec: &'a crate::config::dataset::ParserKind) -> Box<
         Dissect { pattern } => Box::new(dissect::DissectInst(pattern)),
         UserAgent => Box::new(user_agent::UserAgent),
         Timestamp { format } => Box::new(timestamp::Timestamp { format: format.clone() }),
+        Json => Box::new(json::Json::new()),
     }
 }

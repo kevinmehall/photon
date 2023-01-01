@@ -33,6 +33,7 @@ pub enum ParserKind {
     Dissect { pattern: Dissect },
     UserAgent,
     Timestamp { format: TimeFormat },
+    Json,
 }
 
 
