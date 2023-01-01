@@ -4,26 +4,37 @@ use time::OffsetDateTime;
 
 use crate::{ api::{self, query::QueryFilter}, parser::{ParserInst, self}, Dataset };
 
-#[derive(PartialEq, Clone, Debug)]
-pub(crate) enum FieldVal{
+#[derive(PartialEq, Clone, Copy, Debug)]
+pub(crate) enum FieldVal<'b>{
     Null,
-    String(String),
+    String(&'b str),
     Number(f64),
     Time(OffsetDateTime),
 }
 
-impl From<FieldVal> for String {
+impl<'b> std::fmt::Display for FieldVal<'b> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FieldVal::Null => Ok(()),
+            FieldVal::String(s) => f.write_str(s),
+            FieldVal::Number(n) => n.fmt(f),
+            FieldVal::Time(t) => f.write_str(&t.format(&time::format_description::well_known::Rfc3339).unwrap()), // https://github.com/time-rs/time/issues/375
+        }
+    }
+}
+
+impl<'b> From<FieldVal<'b>> for String {
     fn from(v: FieldVal) -> Self {
         match v {
             FieldVal::Null => String::new(),
-            FieldVal::String(s) => s,
+            FieldVal::String(s) => s.to_string(),
             FieldVal::Number(n) => n.to_string(),
             FieldVal::Time(t) => t.format(&time::format_description::well_known::Rfc3339).unwrap(),
         }
     }
 }
 
-impl FieldVal {
+impl<'b> FieldVal<'b> {
     pub fn exists(&self) -> bool {
         match self {
             FieldVal::Null => false,

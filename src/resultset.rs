@@ -1,4 +1,4 @@
-use std::{iter, slice};
+use std::{iter, slice, fmt::Display, fmt::Write};
 
 use serde::Serialize;
 
@@ -16,6 +16,11 @@ impl ResultSet {
     pub fn push(&mut self, s: &str) {
         self.buf.push_str(s);
         self.ptrs.push(self.buf.len())
+    }
+
+    pub fn push_fmt(&mut self, s: impl Display) {
+        write!(self.buf,"{}", s).unwrap();
+        self.ptrs.push(self.buf.len());
     }
 
     pub fn end_row(&mut self) {

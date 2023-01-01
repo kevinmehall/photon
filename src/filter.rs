@@ -17,8 +17,8 @@ pub(crate) fn filter_test(filter: &QueryFilter, val: &FieldVal) -> bool{
         (QueryFilter::TimeSince { since }, FieldVal::Time(t)) => t > &(OffsetDateTime::now_utc() - since.seconds()),
         (QueryFilter::TimeSince { .. }, _) => false,
         
-        (QueryFilter::KeywordIs { is }, FieldVal::String(s)) => is.contains(s),
-        (QueryFilter::KeywordNot { not }, FieldVal::String(s)) => !not.contains(s),
+        (QueryFilter::KeywordIs { is }, FieldVal::String(s)) => is.contains(*s),
+        (QueryFilter::KeywordNot { not }, FieldVal::String(s)) => !not.contains(*s),
         (QueryFilter::KeywordIs{..} | QueryFilter::KeywordNot{..}, _) => false,
     }
 }

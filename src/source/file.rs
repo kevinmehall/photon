@@ -1,4 +1,8 @@
-use std::{fs::File, io::{BufRead, BufReader}, mem};
+use std::{fs::File, io::{BufRead, BufReader}};
+use bumpalo::Bump;
+use bumpalo::collections::String as BString;
+use bumpalo::collections::Vec as BVec;
+
 use crate::{query::{QueryPlan, QueryError, FieldVal}, ResultSet, filter::filter_test, FieldDefaults, api::fields::FieldType};
 
 use super::Source;
@@ -53,21 +57,29 @@ impl Source for FileLines {
 }
 
 fn read_lines(fname: &str, mut file: impl BufRead, plan: &QueryPlan, results: &mut ResultSet, rows_scanned: &mut i32) -> Result<(), QueryError> {
-     let mut buf = Vec::new();
-     let mut pos = 0;
+    let mut bump = Bump::new();
+    bump.set_allocation_limit(Some(16 * 1024 * 1024));
+    let mut buf = Vec::new();
+    let mut pos = 0;
     'line: loop {
         *rows_scanned += 1;
     
         buf.clear();
         let read_size = file.read_until(b'\n', &mut buf)?;
         if read_size == 0 { break; }
+
+        bump.reset();
     
-        let mut root_data = Vec::new();
+        let mut root_data = BVec::new_in(&bump);
     
         for &field in &plan.root_fields {
             let v = match field {
-                "filename" => FieldVal::String(fname.to_string()),
-                "line" => FieldVal::String(String::from_utf8_lossy(&*buf).trim_end_matches('\n').to_string()),
+                "filename" => FieldVal::String(fname),
+                "line" => FieldVal::String(
+                    std::str::from_utf8(&buf).unwrap_or_else(|_|{
+                        BString::from_utf8_lossy_in(&*buf, &bump).into_bump_str()
+                    }).trim_end_matches('\n')
+                ),
                 "offset" => FieldVal::Number(pos as f64),
                 _ => FieldVal::Null,
             };
@@ -75,11 +87,11 @@ fn read_lines(fname: &str, mut file: impl BufRead, plan: &QueryPlan, results: &m
             root_data.push(v);
         }
     
-        let mut data = Vec::new();
-        data.push(root_data);
+        let mut data = BVec::new_in(&bump);
+        data.push(&mut root_data[..]);
     
         for parser in plan.parsers.values() {
-            let vals = parser.parser.parse(&mut data[parser.src.parser][parser.src.field]);
+            let vals = parser.parser.parse(&bump, &mut data[parser.src.parser][parser.src.field]);
             data.push(vals);
         }
     
@@ -90,7 +102,7 @@ fn read_lines(fname: &str, mut file: impl BufRead, plan: &QueryPlan, results: &m
         }
     
         for loc in plan.returning.values() {
-            results.push(&String::from(mem::replace(&mut data[loc.parser][loc.field], FieldVal::Null)));
+            results.push_fmt(&data[loc.parser][loc.field]);
         }
         results.end_row();
         pos += read_size;

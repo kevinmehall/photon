@@ -1,3 +1,4 @@
+use bumpalo::Bump;
 use serde::{Deserialize, Deserializer};
 use time::{OffsetDateTime, format_description::OwnedFormatItem};
 
@@ -53,7 +54,7 @@ impl ParserInst for Timestamp {
         None
     }
 
-    fn parse(&self, input: &mut FieldVal) -> Vec<FieldVal> {
+    fn parse<'b>(&self, _bump: &'b Bump, input: &mut FieldVal) -> &'b mut [FieldVal<'b>] {
         match input {
             FieldVal::String(s) => {
                 if let Ok(t) = OffsetDateTime::parse(s, self.format.as_format()) {
@@ -62,6 +63,6 @@ impl ParserInst for Timestamp {
             },
             FieldVal::Null | FieldVal::Number(_) | FieldVal::Time(_) => {},
         }
-        Vec::new()
+        &mut []
     }
 }

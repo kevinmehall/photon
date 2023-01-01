@@ -1,3 +1,5 @@
+use bumpalo::Bump;
+
 use crate::{query::FieldVal, FieldDefaults, api::fields::FieldType};
 
 pub mod dissect;
@@ -7,7 +9,7 @@ pub mod timestamp;
 pub(crate) trait ParserInst: Send {
     fn require_field(&mut self, field: &str) -> Option<usize>;
 
-    fn parse(&self, input: &mut FieldVal) -> Vec<FieldVal>;
+    fn parse<'b>(&self, bump: &'b Bump, input: &mut FieldVal<'b>) -> &'b mut [FieldVal<'b>];
 }
 
 pub(crate) fn ty(spec: &crate::config::dataset::ParserKind) -> FieldType {

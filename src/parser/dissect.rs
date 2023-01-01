@@ -1,3 +1,5 @@
+use bumpalo::Bump;
+use bumpalo::collections::Vec as BVec;
 use serde::{Deserialize, Deserializer};
 
 use crate::{query::FieldVal, FieldDefaults, api::fields::FieldType};
@@ -81,13 +83,13 @@ impl<'req> ParserInst for DissectInst<'req> {
         self.0.fields.iter().position(|x| x == field)
     }    
 
-    fn parse(&self, input: &mut FieldVal) -> Vec<FieldVal> {
+    fn parse<'b>(&self, bump: &'b Bump, input: &mut FieldVal<'b>) -> &'b mut [FieldVal<'b>] {
         let input = input.as_str().unwrap_or_default();
-        let mut results = Vec::new();
-        if self.0.parse_with(input, |v| results.push(FieldVal::String(v.to_owned()))) {
+        let mut results = BVec::with_capacity_in(self.0.fields.len(), bump);
+        if self.0.parse_with(input, |v| results.push(FieldVal::String(bump.alloc_str(v)))) {
             debug_assert_eq!(results.len(), self.0.fields.len());
-            results
-        } else { Vec::new() }
+            results.into_bump_slice_mut()
+        } else { &mut [] }
     }
 }
 
