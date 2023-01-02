@@ -32,7 +32,11 @@ pub enum SourceKind {
 pub enum ParserKind {
     Dissect { pattern: Dissect },
     UserAgent,
-    Timestamp { format: TimeFormat },
+    Timestamp {
+        format: TimeFormat,
+        #[serde(default)]
+        assume_utc: bool,
+    },
     Json,
 }
 

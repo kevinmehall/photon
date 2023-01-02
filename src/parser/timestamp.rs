@@ -1,6 +1,6 @@
 use bumpalo::Bump;
 use serde::{Deserialize, Deserializer};
-use time::{OffsetDateTime, format_description::OwnedFormatItem};
+use time::{OffsetDateTime, format_description::OwnedFormatItem, PrimitiveDateTime};
 
 use crate::{query::FieldVal, FieldDefaults};
 
@@ -42,7 +42,8 @@ impl TimeFormat {
 
 #[derive(Clone)]
 pub struct Timestamp {
-    pub(super) format: TimeFormat
+    pub(super) format: TimeFormat,
+    pub(super) assume_utc: bool,
 }
 
 pub(crate) fn fields() -> Vec<(&'static str, FieldDefaults)> {
@@ -57,7 +58,13 @@ impl ParserInst for Timestamp {
     fn parse<'b>(&self, _bump: &'b Bump, input: &mut FieldVal) -> &'b mut [FieldVal<'b>] {
         match input {
             FieldVal::String(s) => {
-                if let Ok(t) = OffsetDateTime::parse(s, self.format.as_format()) {
+                let t = if self.assume_utc {
+                    PrimitiveDateTime::parse(s, self.format.as_format()).map(|t| t.assume_utc())
+                } else {
+                    OffsetDateTime::parse(s, self.format.as_format())
+                };
+
+                if let Ok(t) = t {
                     *input = FieldVal::Time(t);
                 }                
             },

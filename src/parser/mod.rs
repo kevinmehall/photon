@@ -38,7 +38,7 @@ pub(crate) fn instance<'a>(spec: &'a crate::config::dataset::ParserKind) -> Box<
     match spec {
         Dissect { pattern } => Box::new(dissect::DissectInst(pattern)),
         UserAgent => Box::new(user_agent::UserAgent),
-        Timestamp { format } => Box::new(timestamp::Timestamp { format: format.clone() }),
+        Timestamp { format, assume_utc} => Box::new(timestamp::Timestamp { format: format.clone(), assume_utc: *assume_utc }),
         Json => Box::new(json::Json::new()),
     }
 }
