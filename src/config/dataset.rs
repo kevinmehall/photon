@@ -30,6 +30,8 @@ pub enum SourceKind {
 #[serde(tag = "parser")]
 #[serde(rename_all = "lowercase")]
 pub enum ParserKind {
+    Keyword,
+    Number,
     Dissect { pattern: Dissect },
     UserAgent,
     Timestamp {
